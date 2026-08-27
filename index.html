@@ -1,0 +1,3481 @@
+﻿<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CiberRetos — Prueba de Competencias Digitales</title>
+<style>
+  :root {
+    --bg: #0a0e1a;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --border: #1e3a5f;
+    --accent: #00d4ff;
+    --accent2: #7c3aed;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --text: #e2e8f0;
+    --text-muted: #64748b;
+    --text-dim: #94a3b8;
+    --star: #fbbf24;
+    --font-display: 'Courier New', monospace;
+    --font-body: system-ui, -apple-system, sans-serif;
+    --radius: 8px;
+    --radius-lg: 16px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,212,255,0.015) 2px, rgba(0,212,255,0.015) 4px);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app { position: relative; z-index: 1; min-height: 100vh; }
+
+  /* ── SCREEN BASE ── */
+  .screen { display: none; }
+  .screen.active { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 24px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-logo {
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+  .header-logo span { color: var(--text-muted); }
+  .header-right { display: flex; gap: 16px; align-items: center; }
+  .timer-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    color: var(--accent);
+  }
+  .timer-badge.warning { color: var(--warning); border-color: var(--warning); }
+  .timer-badge.danger { color: var(--danger); border-color: var(--danger); animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: 0.5; } }
+
+  /* ── PROGRESS BAR ── */
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 24px;
+  }
+  .progress-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .progress-track {
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  /* ── WELCOME SCREEN ── */
+  #screen-welcome {
+    justify-content: center;
+    align-items: center;
+    padding: 40px 24px;
+    text-align: center;
+  }
+  .welcome-inner { max-width: 640px; }
+  .welcome-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    border: 1px solid var(--accent);
+    border-radius: 20px;
+    padding: 4px 16px;
+    margin-bottom: 32px;
+  }
+  .welcome-title {
+    font-size: clamp(32px, 6vw, 56px);
+    font-weight: 800;
+    line-height: 1.1;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, #fff 0%, var(--accent) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .welcome-sub {
+    font-size: 16px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    margin-bottom: 48px;
+  }
+  .course-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  @media(max-width:500px) { .course-grid { grid-template-columns: 1fr; } }
+  .course-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px 20px;
+    cursor: pointer;
+    text-align: left;
+    transition: border-color 0.2s, transform 0.15s, background 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .course-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--accent2) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .course-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .course-card:hover::before { opacity: 0.08; }
+  .course-card:active { transform: translateY(0); }
+  .course-year {
+    font-family: var(--font-display);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .course-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+  .course-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+  .course-retos {
+    margin-top: 12px;
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .privacy-note {
+    font-size: 12px;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .privacy-note::before { content: '🔒'; }
+
+  /* ── INTRO SCREEN ── */
+  #screen-intro {
+    justify-content: center;
+    align-items: center;
+    padding: 40px 24px;
+  }
+  .intro-inner { max-width: 600px; width: 100%; }
+  .intro-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    margin: 0 auto 32px;
+    box-shadow: 0 0 40px rgba(0,212,255,0.3);
+  }
+  .intro-course-name {
+    font-family: var(--font-display);
+    font-size: 12px;
+    letter-spacing: 3px;
+    color: var(--accent);
+    text-transform: uppercase;
+    text-align: center;
+    margin-bottom: 12px;
+  }
+  .intro-title {
+    font-size: 28px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .intro-narrative {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-dim);
+    margin-bottom: 32px;
+  }
+  .intro-info {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+  .info-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    text-align: center;
+  }
+  .info-value { font-size: 22px; font-weight: 800; color: var(--accent); }
+  .info-label { font-size: 11px; color: var(--text-muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: var(--radius);
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: opacity 0.15s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff;
+    width: 100%;
+  }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary {
+    background: var(--surface2);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-hint {
+    background: transparent;
+    border: 1px solid var(--warning);
+    color: var(--warning);
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+  .btn-hint:hover { background: rgba(245,158,11,0.1); }
+  .btn-speak {
+    background: transparent;
+    border: 1px solid var(--accent2);
+    color: var(--accent2);
+    font-size: 13px;
+    padding: 8px 16px;
+  }
+  .btn-speak:hover { background: rgba(124,58,237,0.1); }
+
+  /* ── CHALLENGE SCREEN ── */
+  #screen-challenge { padding: 0; }
+  #screen-challenge.active {
+    min-height: 100vh;
+    overflow: visible;
+  }
+  .challenge-layout {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 320px 1fr;
+    min-height: 0;
+    overflow: visible;
+  }
+  @media(max-width:768px) {
+    .challenge-layout { grid-template-columns: 1fr; }
+    .challenge-sidebar { display: none; }
+  }
+
+  /* Sidebar */
+  .challenge-sidebar {
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .sidebar-title {
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    padding: 0 8px;
+    margin-bottom: 8px;
+  }
+  .sidebar-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 12px;
+    border-radius: var(--radius);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sidebar-item.current {
+    background: var(--surface2);
+    border-color: var(--accent);
+  }
+  .sidebar-item.completed { opacity: 0.7; }
+  .sidebar-item:hover:not(.current) { background: var(--surface2); }
+  .sidebar-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+    font-family: var(--font-display);
+    color: var(--text-muted);
+  }
+  .sidebar-item.current .sidebar-num {
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    color: #fff;
+  }
+  .sidebar-item.completed .sidebar-num { background: var(--success); color: #fff; }
+  .sidebar-info { flex: 1; min-width: 0; }
+  .sidebar-reto-title { font-size: 13px; font-weight: 600; truncate: true; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sidebar-cat { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+  .sidebar-stars { font-size: 14px; }
+
+  /* Challenge main area */
+  .challenge-main {
+    flex: 1;
+    overflow-y: visible;
+    padding: 32px 32px 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-width: none;
+    width: 100%;
+    min-height: 0;
+    scroll-padding-bottom: 160px;
+  }
+  @media(max-width:768px) { .challenge-main { padding: 20px 16px 160px; } }
+
+  .challenge-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .cat-badge {
+    font-family: var(--font-display);
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    border: 1px solid var(--accent2);
+    border-radius: 20px;
+    padding: 3px 12px;
+  }
+  .reto-num { font-size: 13px; color: var(--text-muted); }
+
+  .challenge-title-text { font-size: 24px; font-weight: 800; }
+
+  .narrative-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent2);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .narrative-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .narrative-text { font-size: 15px; line-height: 1.7; color: var(--text-dim); }
+
+  .enunciado-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .enunciado-label {
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .enunciado-text { font-size: 15px; line-height: 1.7; }
+
+  /* Challenge content areas */
+  .content-area {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .content-label {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 10px 16px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+  .content-body { padding: 20px; }
+
+  /* Log viewer */
+  .log-viewer {
+    background: #050810;
+    border-radius: var(--radius);
+    padding: 16px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1.8;
+    color: #a8d8a8;
+    white-space: pre-wrap;
+    word-break: break-all;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+  .log-tabs {
+    display: flex;
+    gap: 2px;
+    background: #050810;
+    padding: 8px 8px 0;
+    border-radius: var(--radius) var(--radius) 0 0;
+  }
+  .log-tab {
+    padding: 6px 14px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    cursor: pointer;
+    border-radius: 4px 4px 0 0;
+    color: var(--text-muted);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    transition: all 0.1s;
+  }
+  .log-tab.active { background: #050810; color: var(--accent); border-color: var(--accent); }
+
+  /* External link box */
+  .ext-link-box {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .ext-link-desc { font-size: 14px; color: var(--text-dim); line-height: 1.5; }
+  .ext-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius);
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+    width: fit-content;
+    transition: background 0.15s;
+  }
+  .ext-link-btn:hover { background: rgba(0,212,255,0.1); }
+  .embedded-browser {
+    margin-top: 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+  .embedded-browser-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(15, 23, 42, 0.72);
+  }
+  .embedded-browser-title {
+    min-width: 0;
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .embedded-browser-frame {
+    width: 100%;
+    height: min(78vh, 900px);
+    min-height: 620px;
+    border: 0;
+    display: block;
+    background: #fff;
+  }
+ .embedded-browser-frame.embedded-tall-1-6 {
+    height: 900px;
+}
+
+.embedded-browser-frame.embedded-tall-2-4 {
+    height: 750px ;
+   
+}
+
+.embedded-browser-frame.embedded-roblox-regalos {
+    height: 1000px;
+}
+
+.embedded-browser-frame.embedded-tall-2-5 {
+    height: 900px;
+}
+.embedded-browser-frame.embedded-no-scroll {
+    height: 1600px;
+}
+  .embedded-help {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+  .sim-window {
+    background: #07101f;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .sim-window-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: rgba(15, 23, 42, 0.9);
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 12px;
+  }
+  .sim-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--danger); }
+  .sim-dot:nth-child(2) { background: var(--warning); }
+  .sim-dot:nth-child(3) { background: var(--success); }
+  .sim-url {
+    flex: 1;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: #020617;
+    color: var(--text-dim);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .sim-page {
+    min-height: 220px;
+    background: #f8fafc;
+    color: #0f172a;
+    padding: 24px;
+  }
+  .sim-page h3 { margin: 0 0 10px; color: #0f172a; }
+  .sim-form {
+    max-width: 360px;
+    display: grid;
+    gap: 10px;
+  }
+  .sim-form input {
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+  }
+  .sim-form button {
+    padding: 10px;
+    border: 0;
+    border-radius: 6px;
+    background: #2563eb;
+    color: #fff;
+    font-weight: 700;
+  }
+  .devtools {
+    border-top: 1px solid var(--border);
+    background: #0b1220;
+  }
+  .devtools-tabs,
+  .props-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .devtools-tab,
+  .props-tab {
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-dim);
+    border-radius: 6px;
+    padding: 7px 10px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .devtools-tab.active,
+  .props-tab.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(0, 212, 255, 0.08);
+  }
+  .devtools-panel,
+  .props-panel {
+    display: none;
+    padding: 14px;
+    font-family: var(--font-display);
+    font-size: 12px;
+    color: var(--text-dim);
+    min-height: 220px;
+    overflow: auto;
+  }
+  .devtools-panel.active,
+  .props-panel.active { display: block; }
+  .code-line { white-space: pre-wrap; overflow-wrap: anywhere; color: #cbd5e1; line-height: 1.7; }
+  .code-comment { color: #22c55e; }
+  .console-line { color: #93c5fd; line-height: 1.8; }
+  .storage-table,
+  .props-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .storage-table td,
+  .storage-table th,
+  .props-table td,
+  .props-table th {
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    padding: 8px;
+    text-align: left;
+  }
+
+  .resource-image {
+    width: 100%;
+    max-height: 70vh;
+    object-fit: contain;
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .external-links-grid,
+  .resource-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 10px;
+  }
+  .resource-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+  }
+  .resource-card-title {
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 6px;
+  }
+  .resource-card-meta {
+    color: var(--text-muted);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .preview-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .resource-card-wide {
+    grid-column: 1 / -1;
+    max-width: 760px;
+    width: 100%;
+    margin: 0 auto;
+  }
+  .preview-thumb {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: contain;
+    display: block;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .document-preview {
+    aspect-ratio: auto;
+    max-height: 460px;
+  }
+  .text-preview {
+    white-space: pre-wrap;
+    font-family: var(--font-display);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+
+  /* Answer area */
+  .answer-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    flex-shrink: 0;
+    margin: 12px 0 72px;
+    padding: 16px;
+    background: rgba(15, 23, 42, 0.72);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+  .confidence-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .confidence-label { font-size: 13px; color: var(--text-muted); }
+  .confidence-label strong { color: var(--text); }
+  .confidence-btns { display: flex; gap: 6px; }
+  .conf-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: var(--surface2);
+    color: var(--text-muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+  .conf-btn.selected { background: var(--accent2); border-color: var(--accent2); color: #fff; }
+  .conf-btn:hover:not(.selected) { border-color: var(--accent2); color: var(--accent2); }
+
+  .answer-input-row { display: flex; gap: 12px; }
+  .answer-input {
+    flex: 1;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 15px;
+    color: var(--text);
+    font-family: var(--font-display);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .answer-input:focus { border-color: var(--accent); }
+  .answer-input.correct { border-color: var(--success); }
+  .answer-input.wrong { border-color: var(--danger); animation: shake 0.3s ease; }
+  @keyframes shake {
+    0%,100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+  .submit-btn {
+    padding: 14px 24px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+    border: none;
+    border-radius: var(--radius);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    white-space: nowrap;
+  }
+  .submit-btn:hover { opacity: 0.9; }
+  .submit-btn:disabled { opacity: 0.5; cursor: default; }
+
+  /* Feedback */
+  .feedback {
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.5;
+    display: none;
+  }
+  .feedback.show { display: block; }
+  .feedback.success { background: rgba(16,185,129,0.1); border: 1px solid var(--success); color: #6ee7b7; }
+  .feedback.error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.4); color: #fca5a5; }
+
+  /* Hints */
+  #hints-container {
+    flex-shrink: 0;
+    margin-top: 12px;
+  }
+  .hints-section { display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px; }
+  .hint-item {
+    background: rgba(245,158,11,0.05);
+    border: 1px solid rgba(245,158,11,0.2);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-dim);
+  }
+  .hint-num {
+    font-size: 11px;
+    color: var(--warning);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .hint-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+  }
+  .hint-header .hint-num { margin-bottom: 0; }
+  .hint-speak {
+    border: 1px solid rgba(245,158,11,0.35);
+    background: rgba(245,158,11,0.08);
+    color: var(--warning);
+    border-radius: var(--radius);
+    padding: 5px 9px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  /* Action buttons row */
+  .action-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  /* ── MEDAL / SUCCESS overlay ── */
+  .medal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    z-index: 200;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(4px);
+  }
+  .medal-overlay.show { display: flex; }
+  .medal-box {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: 40px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 60px rgba(0,212,255,0.2);
+    animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes popIn {
+    from { transform: scale(0.5); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+  .medal-icon { font-size: 64px; margin-bottom: 16px; }
+  .medal-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+  .medal-sub { font-size: 15px; color: var(--text-dim); margin-bottom: 8px; }
+  .medal-stars { font-size: 32px; margin: 12px 0; letter-spacing: 4px; }
+  .medal-stats { font-size: 13px; color: var(--text-muted); margin-bottom: 24px; }
+
+  /* ── RESULTS SCREEN ── */
+  #screen-results {
+    justify-content: center;
+    align-items: center;
+    padding: 40px 24px;
+  }
+  .results-inner { max-width: 640px; width: 100%; }
+  .results-title {
+    font-size: 32px;
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+  .results-sub { text-align: center; color: var(--text-muted); margin-bottom: 32px; }
+  .results-stats {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-value { font-size: 28px; font-weight: 800; color: var(--accent); }
+  .stat-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
+  .results-retos { display: flex; flex-direction: column; gap: 8px; margin-bottom: 24px; }
+  .result-reto {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .result-reto-title { flex: 1; font-size: 14px; font-weight: 600; }
+  .result-reto-stars { font-size: 18px; }
+  .result-reto-cat { font-size: 12px; color: var(--text-muted); }
+
+  /* Alfabeto cipher helper */
+  .cipher-grid {
+    display: grid;
+    grid-template-columns: repeat(13, 1fr);
+    gap: 4px;
+    font-family: var(--font-display);
+    font-size: 11px;
+    text-align: center;
+  }
+  .cipher-cell { padding: 4px 2px; }
+  .cipher-cell span { display: block; color: var(--text-muted); }
+
+  /* Mobile apps list */
+  .apps-grid { display: flex; flex-direction: column; gap: 10px; }
+  .app-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .app-item:hover { border-color: var(--accent); }
+  .app-name { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .app-permisos { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+  .app-item.maliciosa-selected { border-color: var(--success); background: rgba(16,185,129,0.05); }
+
+  /* URL comparador */
+  .urls-list { display: flex; flex-direction: column; gap: 8px; }
+  .url-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .url-item:hover { border-color: var(--accent2); }
+  .url-domain {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .url-item.legit .url-domain { color: var(--success); }
+  .url-pista { font-size: 12px; color: var(--text-muted); line-height: 1.4; }
+  .url-flag { font-size: 12px; color: var(--success); margin-top: 4px; display: none; }
+  .url-item.revealed .url-flag { display: block; }
+
+  /* Correos */
+  .correo-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .correo-item:hover { border-color: var(--accent2); }
+  .correo-remitente { font-family: var(--font-display); font-size: 13px; color: var(--accent); margin-bottom: 4px; }
+  .correo-asunto { font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+  .correo-indicios { font-size: 12px; color: var(--text-muted); line-height: 1.5; display: none; }
+  .correo-item.expanded .correo-indicios { display: block; }
+
+  /* Puzzle texto */
+  .piezas-list { display: flex; flex-direction: column; gap: 6px; }
+  .pieza-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-dim);
+    position: relative;
+    padding-left: 36px;
+  }
+  .pieza-num {
+    position: absolute;
+    left: 10px;
+    top: 12px;
+    font-family: var(--font-display);
+    font-size: 11px;
+    color: var(--accent2);
+    font-weight: 700;
+  }
+
+  /* Descifrado numérico */
+  .manual-text {
+    background: #050810;
+    border-radius: var(--radius);
+    padding: 16px;
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1.8;
+    color: #a8d8a8;
+    white-space: pre-wrap;
+  }
+
+  /* Forense */
+  .forense-tabs { display: flex; flex-direction: column; gap: 8px; }
+
+  /* Auditoria noticias */
+  .argumentos-list { display: flex; flex-direction: column; gap: 6px; }
+  .argumento-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  .argumento-item:hover { border-color: var(--accent2); }
+  .argumento-item.selected { border-color: var(--success); background: rgba(16,185,129,0.06); color: var(--text); }
+  .argumento-check {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .argumento-item.selected .argumento-check { background: var(--success); border-color: var(--success); color: #fff; }
+
+  /* Panel interactivo spoofing */
+  .panel-btns { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; }
+  .panel-btn {
+    padding: 14px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--text-dim);
+    font-size: 13px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+  .panel-btn:hover { border-color: var(--accent2); }
+  .panel-btn.active { border-color: var(--accent); background: rgba(0,212,255,0.08); color: var(--accent); }
+
+  /* Cipher decode helper interactive */
+  .decoder-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .decoded-preview {
+    background: #050810;
+    border-radius: var(--radius);
+    padding: 14px;
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
+  /* ── TOOLTIPS / MICRO ── */
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .tag-success { background: rgba(16,185,129,0.15); color: var(--success); }
+  .tag-warning { background: rgba(245,158,11,0.15); color: var(--warning); }
+  .tag-info { background: rgba(0,212,255,0.1); color: var(--accent); }
+
+  /* ── TRANSITIONS ── */
+  .fade-in { animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .attempts-counter {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+  }
+
+  /* PANEL DOCENTE - METRICAS */
+  .teacher-entry-panel{margin-top:14px;font-size:13px;color:var(--text-muted);cursor:pointer;text-decoration:underline}.teacher-entry-panel:hover{color:var(--accent2)}
+  #screen-tlogin{justify-content:center;align-items:center;padding:40px 24px;text-align:center}
+  #screen-tlogin .intro-inner{max-width:420px;width:100%;display:flex;flex-direction:column;align-items:center}
+  #screen-tlogin .teacher-login-card{margin:18px auto 10px}
+  .panel-wrap{min-height:100vh;background:var(--bg);width:100%}.panel-header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;position:sticky;top:0;z-index:10;flex-wrap:wrap}.panel-logo{font-family:var(--font-display);font-size:13px;color:var(--accent2);letter-spacing:1px;font-weight:700}.panel-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn-sm-panel{padding:7px 12px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface2);color:var(--text-dim);cursor:pointer;font-size:12px;font-family:var(--font-display)}.btn-sm-panel:hover{border-color:var(--accent);color:var(--accent)}.btn-danger-panel:hover{border-color:var(--danger);color:var(--danger)}.panel-body{padding:24px;max-width:1180px;margin:0 auto;width:100%}.teacher-login-card{width:100%;max-width:360px;display:flex;flex-direction:column;gap:12px}.teacher-login-card input{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);padding:12px 16px;font-size:14px;width:100%}
+  .stats-row-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:24px}.stat-card-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;text-align:center}.stat-val-panel{font-family:var(--font-display);font-size:24px;color:var(--accent);font-weight:800}.stat-label-panel{font-size:11px;color:var(--text-muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}.section-title-panel{font-family:var(--font-display);font-size:11px;color:var(--accent2);letter-spacing:1.5px;text-transform:uppercase;margin:24px 0 12px;border-bottom:1px solid var(--border);padding-bottom:6px}.course-summary-grid-panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-bottom:24px}.course-summary-card-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px}.course-summary-title-panel{font-weight:800;color:var(--text);margin-bottom:10px}.course-summary-metrics-panel{display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:12px;color:var(--text-muted)}.course-summary-metrics-panel span{display:block;color:var(--text);font-weight:800;font-family:var(--font-display)}
+  .sessions-table-panel{width:100%;border-collapse:collapse;font-size:12px}.sessions-table-panel th{text-align:left;padding:10px 8px;color:var(--text-muted);border-bottom:1px solid var(--border);font-weight:600;font-family:var(--font-display);font-size:11px}.sessions-table-panel td{padding:10px 8px;border-bottom:1px solid rgba(30,58,95,.4);vertical-align:top}.sessions-table-panel tr.session-row-panel{cursor:pointer}.sessions-table-panel tr.session-row-panel:hover td{background:rgba(0,212,255,.03)}.badge-panel{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-family:var(--font-display);white-space:nowrap}.badge-ok-panel{background:rgba(16,185,129,.12);color:var(--success)}.badge-warn-panel{background:rgba(245,158,11,.12);color:var(--warning)}.badge-danger-panel{background:rgba(239,68,68,.12);color:var(--danger)}.badge-info-panel{background:rgba(0,212,255,.1);color:var(--accent)}.detail-row-panel{display:none;background:rgba(15,23,42,.22)}.detail-row-panel.open{display:table-row}.student-results-panel{display:flex;flex-direction:column;gap:10px;padding:12px 4px 16px}.student-result-card-panel{display:flex;align-items:center;justify-content:space-between;gap:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 18px}.student-result-title-panel{font-weight:800;color:var(--text);font-size:15px}.student-result-meta-panel{color:var(--text-muted);font-size:12px;margin-top:2px}.student-result-stars-panel{color:var(--star);font-size:20px;white-space:nowrap}.student-result-card-panel.not-done{opacity:.72}.empty-state-panel{text-align:center;padding:60px 20px;color:var(--text-muted)}.empty-icon-panel{font-size:40px;margin-bottom:12px}.refresh-badge-panel{font-size:10px;color:var(--text-muted);font-family:var(--font-display)}
+  @media(max-width:760px){.student-result-card-panel{align-items:flex-start;flex-direction:column}.sessions-table-panel{min-width:760px}}
+/* Visor de imágenes ampliadas */
+.resource-image,
+.preview-thumb {
+  cursor: zoom-in;
+}
+
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 30px;
+  background: rgba(0, 0, 0, 0.85);
+}
+
+.image-lightbox.active {
+  display: flex;
+}
+
+.image-lightbox img {
+  max-width: 95vw;
+  max-height: 90vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  cursor: zoom-out;
+}
+
+.image-lightbox-close {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 36px;
+  line-height: 1;
+  cursor: pointer;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <!-- WELCOME SCREEN -->
+  <div id="screen-welcome" class="screen active">
+    <div style="flex:1; display:flex; align-items:center; justify-content:center; padding:40px 24px;">
+      <div class="welcome-inner">
+        <div class="welcome-badge">Prueba de Competencias Digitales · IES</div>
+        <h1 class="welcome-title">CiberRetos</h1>
+        <p class="welcome-sub">Acompañarás a Alex en una serie de misiones de ciberseguridad.<br>Sin registro, sin contraseñas. Elige tu curso y empieza.</p>
+        <div class="course-grid" id="course-grid"></div>
+        <p class="privacy-note">Sesión anónima · Tus datos no son identificables · Solo para fines educativos</p>
+        <p class="teacher-entry-panel" onclick="showTeacherLogin()">Acceso panel docente →</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- INTRO SCREEN -->
+  <div id="screen-intro" class="screen">
+    <div class="intro-inner fade-in">
+      <div class="intro-icon">🛡️</div>
+      <div class="intro-course-name" id="intro-course-name"></div>
+      <h2 class="intro-title" id="intro-title"></h2>
+      <div class="intro-narrative" id="intro-narrative"></div>
+      <div class="intro-info">
+        <div class="info-item">
+          <div class="info-value" id="intro-num-retos">—</div>
+          <div class="info-label">Retos</div>
+        </div>
+        <div class="info-item">
+          <div class="info-value" id="intro-tiempo">45 min</div>
+          <div class="info-label">Tiempo máx.</div>
+        </div>
+        <div class="info-item">
+          <div class="info-value">★★★</div>
+          <div class="info-label">Por reto</div>
+        </div>
+      </div>
+      <button class="btn btn-primary" onclick="startChallenge()">Comenzar la misión →</button>
+    </div>
+  </div>
+
+  <!-- CHALLENGE SCREEN -->
+  <div id="screen-challenge" class="screen">
+    <div class="header">
+      <div class="header-logo">CIBER<span>RETOS</span></div>
+      <div class="header-right">
+        <button class="btn btn-secondary" onclick="speakCurrent()" id="speak-btn" style="padding:8px 14px; font-size:13px;">🔊 Escuchar</button>
+        <div class="timer-badge" id="timer-display">⏱ 45:00</div>
+      </div>
+    </div>
+    <div class="progress-bar-wrap">
+      <div class="progress-meta">
+        <span id="progress-label">Reto 1 de 6</span>
+        <span id="progress-pct">0%</span>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="challenge-layout">
+      <div class="challenge-sidebar" id="sidebar"></div>
+      <div class="challenge-main" id="challenge-main"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="screen-results" class="screen">
+    <div class="results-inner fade-in">
+      <div class="intro-icon">🏆</div>
+      <h2 class="results-title">¡Misión completada!</h2>
+      <p class="results-sub" id="results-sub"></p>
+      <div class="results-stats">
+        <div class="stat-card">
+          <div class="stat-value" id="r-pct">—</div>
+          <div class="stat-label">Completado</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="r-time">—</div>
+          <div class="stat-label">Tiempo</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="r-stars">—</div>
+          <div class="stat-label">Estrellas</div>
+        </div>
+      </div>
+      <div class="results-retos" id="results-retos"></div>
+      <button class="btn btn-primary" onclick="goHome()">Volver al inicio</button>
+    </div>
+  </div>
+  <!-- TEACHER LOGIN SCREEN -->
+  <div id="screen-tlogin" class="screen">
+    <div class="intro-inner fade-in">
+      <div class="intro-icon">▣</div>
+      <div class="intro-course-name">Panel Docente</div>
+      <h2 class="intro-title">Acceso restringido</h2>
+      <div class="intro-narrative">Introduce la contraseña del panel docente para acceder a las métricas de clase.</div>
+      <div class="teacher-login-card">
+        <input type="password" id="teacher-pwd" placeholder="Contraseña docente" onkeydown="if(event.key==='Enter')checkTeacherPwd()">
+        <button class="btn btn-primary" onclick="checkTeacherPwd()">Acceder</button>
+        <div id="pwd-error" style="color:var(--danger);font-size:12px;text-align:center;display:none">Contraseña incorrecta</div>
+      </div>
+      <button class="btn btn-secondary" onclick="showScreen('welcome')">Volver</button>
+    </div>
+  </div>
+
+  <!-- TEACHER PANEL SCREEN -->
+  <div id="screen-panel" class="screen">
+    <div class="panel-wrap">
+      <div class="panel-header">
+        <div class="panel-logo">PANEL DOCENTE · MÉTRICAS CTF</div>
+        <div class="panel-actions">
+          <span class="refresh-badge-panel" id="last-update"></span>
+          <button class="btn-sm-panel" onclick="refreshPanel()">Actualizar</button>
+          <button class="btn-sm-panel" onclick="exportCSV()">Exportar CSV</button>
+          <button class="btn-sm-panel btn-danger-panel" onclick="clearAllData()">Borrar datos</button>
+          <button class="btn-sm-panel" onclick="showScreen('welcome')">Salir</button>
+        </div>
+      </div>
+      <div class="panel-body" id="panel-body"><div class="empty-state-panel">Cargando métricas...</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MEDAL OVERLAY -->
+<div class="medal-overlay" id="medal-overlay">
+  <div class="medal-box">
+    <div class="medal-icon" id="medal-icon">🎖️</div>
+    <div class="medal-title" id="medal-title">¡Reto superado!</div>
+    <div class="medal-sub" id="medal-sub"></div>
+    <div class="medal-stars" id="medal-stars">★★★</div>
+    <div class="medal-stats" id="medal-stats"></div>
+    <button class="btn btn-primary" onclick="closeMedal()" id="medal-btn">Siguiente reto →</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+//  DATA — Course definitions (inline JSON)
+// ═══════════════════════════════════════════════════
+const COURSES = {};
+
+COURSES['1eso'] = {"id":"1eso","nombre":"1º ESO","titulo":"Identidad Digital y Primeros Pasos","intro":"Alex acaba de empezar 1º de ESO. Tiene móvil nuevo, redes sociales, juegos online y muchos archivos personales. En esta misión aprenderá a proteger su identidad digital, reconocer trampas en internet y pensar antes de compartir datos.","retos":[{"id":"1_1","orden":1,"categoria":"Identidad Digital","titulo":"Perfil Impostor","narrativa":"Alex recibe cuatro solicitudes de amistad en una red social del instituto. Al principio todas parecen normales, pero una cuenta se ha creado para acercarse a alumnos y recoger información personal. Alex no quiere bloquear a alguien real por error, así que necesita analizar las pistas con calma.","enunciado":"Observa la imagen de los perfiles. Busca la cuenta que parezca falsa o automatizada y escribe la flag que aparece asociada a ese perfil.","tipo":"imagen_recurso","flag":"CREEPER","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Una cuenta falsa suele tener señales pequeñas: nombre raro, usuario con muchos números, pocas publicaciones, pocos contactos reales o una biografía vacía. En ciberseguridad no basta con mirar una sola pista: hay que comparar varias."},{"nivel":2,"texto":"Compara los cuatro perfiles como si fueras Alex: busca cuál tiene menos historia personal y parece creado en masa. La respuesta está escrita en el propio perfil sospechoso; copia solo la palabra de la flag."}],"errores_comunes":[{"patron":"maria|carlos|sofia|amigo|real","tipo":"perfil_legitimo","mensaje":"Has elegido un perfil que parece tener más datos coherentes. Revisa el perfil con menos actividad y menos señales de ser una persona real."},{"patron":"^$","tipo":"vacio","mensaje":"No has escrito ninguna respuesta."}],"imagen_src":"uploads/a7a30b5fb9e5064ef9ad7510f34a2a35/RETO_1.png","recurso_titulo":"Perfiles recibidos por Alex"},{"id":"1_2","orden":2,"categoria":"Navegación Segura","titulo":"El Regalo de Roblox","narrativa":"Alex está jugando a Roblox y encuentra un anuncio que promete un objeto exclusivo gratis. En el foro aparecen cuatro enlaces distintos. Algunos intentan parecer oficiales, pero podrían robar cuentas o datos personales.","enunciado":"Abre los enlaces y decide cuál pertenece a la página legítima. Cuando encuentres el código oculto en la página segura, escríbelo como flag.","tipo":"enlaces_externos","opciones":[{"url":"roblox-gratis.com","legitima":false,"pista_visual":"Dominio .com genérico, oferta de premios sin coste, formulario que pide usuario y contraseña de Roblox."},{"url":"roblox-premios2026.net","legitima":false,"pista_visual":"Dominio .net con el año actual incluido a propósito; cuenta atrás de urgencia artificial."},{"url":"roblox-regalos.xyz","legitima":false,"pista_visual":"Extensión .xyz poco habitual en sitios oficiales; ventana emergente de 'has ganado'."},{"url":"www.roblox.com/promociones","legitima":true,"pista_visual":"Dominio oficial exacto roblox.com, sin guiones ni palabras añadidas, conexión segura.","flag_visible":"DRAGON"}],"flag":"DRAGON","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Antes de confiar en una web, mira el dominio. Las páginas falsas suelen añadir palabras atractivas como gratis, regalos o premios al nombre de una marca conocida."},{"nivel":2,"texto":"La página más segura será la que conserve el dominio oficial de la marca. Cuando entres en ella, busca un código corto relacionado con la promoción; esa palabra es la flag."}],"errores_comunes":[{"patron":"roblox-gratis|roblox-premios|roblox-regalos","tipo":"url_falsa","mensaje":"Ese dominio intenta parecer oficial, pero usa palabras añadidas. Busca el dominio que mantiene la marca oficial."},{"patron":"roblox|premio|gratis|regalo","tipo":"respuesta_descriptiva","mensaje":"La respuesta no es una descripción del reto. Debes escribir el código oculto que aparece en la página legítima."}],"enlaces":[{"titulo":"roblox-gratis.com","url":"https://soniapalomo.github.io/RETOS-1-ESO/RETO%202/roblox-gratis.com/"},{"titulo":"roblox-premios2026.net","url":"https://soniapalomo.github.io/RETOS-1-ESO/RETO%202/roblox-premios2026.net/"},{"titulo":"roblox-regalos.xyz","url":"https://soniapalomo.github.io/RETOS-1-ESO/RETO%202/roblox-regalos.xyz/"},{"titulo":"www.roblox.com/promociones","url":"https://soniapalomo.github.io/RETOS-1-ESO/RETO%202/www.roblox.com/promociones/"}]},{"id":"1_3","orden":3,"categoria":"Privacidad","titulo":"La Carpeta Sospechosa","narrativa":"Alex pierde su portátil durante el recreo. Aunque lo recupera, se da cuenta de algo importante: si un dispositivo no está protegido, cualquier persona podría ver fotos, documentos, horarios y trabajos. Ahora debe identificar qué archivo expone más datos personales.","enunciado":"Revisa los recursos que aparecen en pantalla. No necesitas descargar nada. Decide cuál muestra la información más delicada sobre Alex y escribe la flag del recurso correcto.","tipo":"paquete_recurso","imagenes":[{"id":"a","descripcion":"Foto de una mochila con un libro encima en una mesa de cafetería, con el nombre 'Alex' escrito en el libro.","nivel_exposicion":"medio","emoji":"🎒"},{"id":"b","descripcion":"Captura de un perfil de videojuego con apodo, nivel y estadísticas, sin foto real ni datos identificables.","nivel_exposicion":"bajo","emoji":"🎮"},{"id":"c","descripcion":"Foto de una persona con cara visible, nombre completo, centro educativo y número de dorsal visibles.","nivel_exposicion":"alto","es_correcta":true,"flag_visible":"DATOS_CARA","emoji":"📸"},{"id":"d","descripcion":"Foto de una fachada con número de calle y nombre de la calle visibles, sin personas.","nivel_exposicion":"medio","emoji":"🏠"}],"flag":"DATOS_CARA","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Para valorar la privacidad, pregunta: si alguien ve este archivo, ¿puede identificar a Alex?, ¿saber dónde estudia?, ¿conocer su rutina?, ¿relacionar su cara con su nombre? cuántas más respuestas sean sí, mayor es el riesgo."},{"nivel":2,"texto":"El archivo más peligroso no es siempre el que tiene más texto. Una imagen que une cara, nombre y centro educativo permite identificar a una persona rápidamente. Busca el recurso que combine esos datos y copia su flag."}],"errores_comunes":[{"patron":"horario|trabajo","tipo":"documento_confundido","mensaje":"Ese documento revela información, pero busca el recurso que permite identificar a Alex de forma más directa."},{"patron":"a|b|c|d|e|img|imagen","tipo":"formato","mensaje":"No escribas el nombre del archivo. Debes introducir la palabra de la flag que aparece en el recurso correcto."}],"recurso_desc":"Todos los archivos necesarios aparecen aquí. Analiza qué datos personales revela cada uno: nombre, curso, centro, imagen, horario o actividad escolar.","previsualizaciones":[{"tipo":"imagen","nombre":"IMG-1034.png","url":"uploads/8546791c85b5e00cb71bb95d3b22e3bc/RETO_3_extraido/RETO 3/IMG-1034.png","descripcion":"Imagen recuperada del portátil de Alex"},{"tipo":"imagen","nombre":"IMG_1035.png","url":"uploads/8546791c85b5e00cb71bb95d3b22e3bc/RETO_3_extraido/RETO 3/IMG_1035.png","descripcion":"Imagen recuperada del portátil de Alex"},{"tipo":"imagen","nombre":"IMG_1036.png","url":"uploads/8546791c85b5e00cb71bb95d3b22e3bc/RETO_3_extraido/RETO 3/IMG_1036.png","descripcion":"Imagen recuperada del portátil de Alex"},{"tipo":"imagen","nombre":"IMG_1037.png","url":"uploads/8546791c85b5e00cb71bb95d3b22e3bc/RETO_3_extraido/RETO 3/IMG_1037.png","descripcion":"Imagen recuperada del portátil de Alex"},{"tipo":"imagen","nombre":"IMG_1038.png","url":"uploads/8546791c85b5e00cb71bb95d3b22e3bc/RETO_3_extraido/RETO 3/IMG_1038.png","descripcion":"Imagen recuperada del portátil de Alex"},{"tipo":"imagen","nombre":"horario_escolar.png","url":"uploads/1eso_reto3/horario_escolar.png","descripcion":"Vista del horario escolar como imagen"},{"tipo":"imagen","nombre":"trabajo_ciencias.png","url":"uploads/1eso_reto3/trabajo_ciencias.png","descripcion":"Vista del documento como imagen"}],"permitir_descarga":false},{"id":"1_4","orden":4,"categoria":"Contraseñas","titulo":"El código Caja Fuerte","narrativa":"Alex quiso crear una contraseña fuerte para proteger su portátil. Usó palabras, un número y símbolos, pero ahora solo conserva varias pistas en su libreta. Para recuperarla tendrá que ordenar las piezas sin saltarse ningún carácter.","enunciado":"Lee las pistas en pantalla. Reconstruye la contraseña final respetando mayúsculas, símbolos y orden. La flag es la contraseña completa.","tipo":"paquete_recurso","piezas_libreta":["Una contraseña segura debe tener al menos 12 caracteres, combinar letras, números y símbolos, y no debe contener nombres de personas, ciudades o lugares conocidos.","Alex recuerda haber utilizado tres palabras de esta lista: Verde, Nube, Laura, Madrid, Valencia, Roca.","El color aparece al principio. El elemento relacionado con la naturaleza aparece al final. La palabra relacionada con algo sólido aparece entre ambas.","El número utilizado fue 82. Estaba entre la segunda y la tercera palabra.","Los símbolos utilizados fueron $, _ e !. El $ separa las dos primeras palabras, el _ aparece justo antes del número, y el ! aparece justo después del número."],"flag":"Verde$Roca_82!Nube","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Alex recuerda las normas que aprendió en clase: una contraseña segura debe tener al menos 12 caracteres, combinar letras, números y símbolos, y evitar nombres de personas o ciudades conocidas."},{"nivel":2,"texto":"Construye la contraseña con esta estructura: color, símbolo separador, palabra sólida, guión bajo, número, símbolo final y palabra de naturaleza. Revisa mayúsculas y símbolos antes de enviar."}],"errores_comunes":[{"patron":"laura|madrid|valencia","tipo":"dato_personal_o_lugar","mensaje":"Esa palabra debe descartarse: una contraseña segura no debería usar nombres de personas ni ciudades conocidas."},{"patron":"verde|roca|nube|82","tipo":"formato_incompleto","mensaje":"Vas bien con las piezas, pero faltan símbolos, mayúsculas o el orden exacto."}],"recurso_descargable":"uploads/839a1fb33977194cd571ffb11aa2a727/RETO_4.zip","recurso_desc":"Las pistas se muestran aquí para resolver el reto sin descargar archivos. Lee cada tarjeta y construye la contraseña paso a paso.","previsualizaciones":[{"tipo":"texto","nombre":"PISTA 1 - Palabras candidatas","contenido":"Verde\nNube\nLaura\nMadrid\nValencia\nRoca","grande":true},{"tipo":"texto","nombre":"PISTA 2 - Orden de las palabras","contenido":"El color va al principio.\nLa palabra relacionada con algo sólido va después.\nEl elemento de la naturaleza va al final.","grande":true},{"tipo":"texto","nombre":"PISTA 3 - Número","contenido":"El número es 82.\nEstaba entre la segunda y la tercera palabra.","grande":true},{"tipo":"texto","nombre":"PISTA 4 - Símbolos","contenido":"Usa estos símbolos: $, _ y !\nEl símbolo $ separa la primera y la segunda palabra.\nEl símbolo _ va justo antes del número.\nEl símbolo ! va justo después del número.","grande":true}],"permitir_descarga":false},{"id":"1_5","orden":5,"categoria":"Permisos","titulo":"Permisos Abusivos en el móvil","narrativa":"El móvil nuevo de Alex va lento y la batería dura muy poco. Una app puede estar funcionando como spyware: parece inofensiva, pero pide permisos que no necesita para su función real.","enunciado":"Abre el simulador, revisa los permisos de cada aplicación y encuentra la app que pide accesos abusivos. Escribe la bandera que aparece en esa aplicación.","tipo":"enlace_externo","apps":[{"nombre":"Calculadora Pro","permisos":["Sin permisos especiales"],"maliciosa":false},{"nombre":"Linterna Brillante","permisos":["Cámara (para el flash)"],"maliciosa":false},{"nombre":"FotoEditor Genial","permisos":["Galería de fotos","Contactos","Micrófono","Ubicación precisa en todo momento","Lista de llamadas"],"maliciosa":true,"flag_visible":"NOTAS"},{"nombre":"Notas Rápidas","permisos":["Almacenamiento"],"maliciosa":false}],"flag":"NOTAS","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Un permiso es razonable si tiene relación directa con la función de la app. Una cámara puede pedir acceso a fotos; una app de notas no debería necesitar ubicación, micrófono o llamadas para escribir texto."},{"nivel":2,"texto":"Busca la app que acumula permisos innecesarios para lo que promete hacer. Esa diferencia entre función real y permisos solicitados es una señal típica de spyware."}],"errores_comunes":[{"patron":"calculadora|linterna|fotos|camara","tipo":"app_equivocada","mensaje":"Esa app puede pedir algunos permisos coherentes. Busca la que solicita accesos que no necesita para cumplir su función."}],"url_externa":"https://soniapalomo.github.io/RETOS-1-ESO/RETO%205/","enlace_titulo":"Permisos"},{"id":"1_6","orden":6,"categoria":"Fake News","titulo":"El Detector de Bulos","narrativa":"A Alex le llega por mensajería una noticia espectacular: una app promete mejorar las notas de los estudiantes un 40%. Antes de compartirla, Alex decide comprobar si hay señales de desinformación.","enunciado":"Abre la noticia y selecciona solo los argumentos que demuestran que puede ser falsa o dudosa. Hazlo en orden alfabético y escribe la palabra oculta resultante.","tipo":"enlace_externo","argumentos":[{"texto":"El artículo no cita ninguna fuente científica ni estudio verificable.","es_indicio_falsedad":true,"letra":"F"},{"texto":"La noticia tiene fecha de publicación reciente.","es_indicio_falsedad":false},{"texto":"El titular usa una cifra exagerada y emocional ('40%') sin contexto.","es_indicio_falsedad":true,"letra":"A"},{"texto":"El artículo está escrito en español.","es_indicio_falsedad":false},{"texto":"La web no muestra autor, ni sección de contacto, ni información sobre quién la publica.","es_indicio_falsedad":true,"letra":"K"},{"texto":"El texto incluye varias faltas de ortografía y errores de traducción automática.","es_indicio_falsedad":true,"letra":"E"}],"flag":"FAKE","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Para detectar bulos, revisa si la noticia cita fuentes verificables, si tiene autor identificable, si usa titulares exagerados y si aporta pruebas reales. La emoción no es una prueba."},{"nivel":2,"texto":"Selecciona solo los indicios que sean señales reales de desinformación. Después ordénalos alfabéticamente y mira las letras que registra el sistema para formar la palabra final."}],"errores_comunes":[{"patron":"noticia|bulo|fake news|falsa","tipo":"respuesta_descriptiva","mensaje":"La respuesta no es una descripción. Debes escribir la palabra oculta que se forma al seleccionar los indicios correctos."},{"patron":".*","tipo":"seleccion_incorrecta","mensaje":"Revisa que hayas elegido solo indicios reales de desinformación y en el orden indicado."}],"url_externa":"https://soniapalomo.github.io/RETOS-1-ESO/RETO%206/","enlace_titulo":"Fake News"}]};
+
+COURSES['2eso'] = {"id":"2eso","nombre":"2º ESO","titulo":"Amenazas, Malware y Red","intro":"Alex ya usa más servicios digitales: correo, videojuegos, redes del centro y equipos compartidos. En 2º ESO tendrá que reconocer amenazas más serias como keyloggers, phishing, ransomware, troyanos y suplantación en red.","retos":[{"id":"2_1","orden":1,"categoria":"Keylogger","titulo":"El Rastro Digital","narrativa":"Alex está ayudando al equipo TIC del instituto a investigar un acceso sospechoso. Han encontrado un registro de keylogger: una herramienta peligrosa que captura las teclas que escribe una persona. No todo lo registrado es importante; hay que diferenciar pruebas, juegos e intentos reales de inicio de sesión.","enunciado":"Revisa las evidencias en pantalla. Encuentra la contraseña que realmente dio acceso al sistema e introdúcela exactamente como quedó escrita.","tipo":"paquete_recurso","logs":[{"nombre":"actividad_sistema.txt","contenido":"14:08 Documento de texto abierto\n14:09 Intento de inicio de sesión\n14:10 Videojuego en ejecución\n14:11 Intento de inicio de sesión\n14:12 Inicio de sesión correcto"},{"nombre":"registro_teclado.txt","contenido":"[14:08:55] Ventana activa: Bloc de notas\n[14:08:56-59] h o l a 1 2 3\n\n[14:09:30] Ventana activa: Navegador web\n[14:09:31-36] p a s s 2 0 2 7 [BACKSPACE] 6 ! [ENTER]\n\n[14:10:02] Ventana activa: Juego\n[14:10:03-07] g a m e r 2 0 2 6 ! [TAB]\n\n[14:11:40] Ventana activa: Portal de acceso\n[14:11:41-46] a l e x 2 0 2 6 ! [BACKSPACE] !\n\n[14:12:10] Ventana activa: Portal de acceso\n[14:12:11-17] [SHIFT] a l e x 2 0 2 7 [BACKSPACE] 6 ! [ENTER]"}],"flag":"Alex2026!","case_insensitive":false,"pistas":[{"nivel":1,"texto":"Un keylogger registra muchas teclas, pero no todas son contraseñas válidas. Primero localiza en el registro del sistema qué hora corresponde al inicio de sesión correcto y crúzala con las teclas capturadas en esa ventana."},{"nivel":2,"texto":"En los registros de teclado, [BACKSPACE] significa borrar el carácter anterior y [SHIFT] puede cambiar una letra a mayúscula. Reconstruye solo la secuencia de la ventana Portal de acceso en la hora correcta."}],"errores_comunes":[{"patron":"hola123|gamer2026|pass2026|pass2027","tipo":"ventana_equivocada","mensaje":"Esa secuencia pertenece a otra ventana o a un intento que no fue el acceso correcto. Cruza la hora con el registro del sistema."},{"patron":"^alex2026","tipo":"mayuscula_inicial","mensaje":"Revisa la mayúscula inicial: el registro incluye [SHIFT] justo antes de escribir la primera letra."}],"permitir_descarga":false,"recurso_desc":"","previsualizaciones":[{"tipo":"texto","nombre":"actividad_sistema.txt","contenido":"REGISTRO DEL SISTEMA\n\n14:08 Documento de texto abierto\n14:09 Intento de inicio de sesión\n14:10 Videojuego en ejecución\n14:11 Intento de inicio de sesión\n14:12 Inicio de sesión correcto","grande":true},{"tipo":"texto","nombre":"registro_teclado.txt","contenido":"[14:08:55] Ventana activa: Bloc de notas\n[14:08:56] h\n[14:08:56] o\n[14:08:57] l\n[14:08:57] a\n[14:08:58] 1\n[14:08:58] 2\n[14:08:59] 3\n\n[14:09:30] Ventana activa: Navegador web\n[14:09:31] p\n[14:09:31] a\n[14:09:32] s\n[14:09:32] s\n[14:09:33] 2\n[14:09:33] 0\n[14:09:34] 2\n[14:09:34] 7\n[14:09:35] [BACKSPACE]\n[14:09:35] 6\n[14:09:36] !\n[14:09:36] [ENTER]\n\n[14:10:02] Ventana activa: Juego\n[14:10:03] g\n[14:10:03] a\n[14:10:04] m\n[14:10:04] e\n[14:10:05] r\n[14:10:05] 2\n[14:10:06] 0\n[14:10:06] 2\n[14:10:07] 6\n[14:10:07] !\n[TAB]\n\n[14:11:40] Ventana activa: Portal de acceso\n[14:11:41] a\n[14:11:41] l\n[14:11:42] e\n[14:11:42] x\n[14:11:43] 2\n[14:11:43] 0\n[14:11:44] 2\n[14:11:44] 6\n[14:11:45] !\n[14:11:46] [BACKSPACE]\n[14:11:46] !\n\n[14:12:10] Ventana activa: Portal de acceso\n[14:12:11] [SHIFT]\n[14:12:11] a\n[14:12:12] l\n[14:12:12] e\n[14:12:13] x\n[14:12:13] 2\n[14:12:14] 0\n[14:12:14] 2\n[14:12:15] 7\n[14:12:15] [BACKSPACE]\n[14:12:16] 6\n[14:12:16] !\n[14:12:17] [ENTER]","grande":true}]},{"id":"2_2","orden":2,"categoria":"Phishing","titulo":"El Correo Impostor","narrativa":"El correo del instituto ha aislado varios mensajes sospechosos antes de que lleguen a los alumnos. Alex entra en la consola de seguridad para decidir cuál usa manipulación psicológica para robar credenciales.","enunciado":"Abre la consola externa, revisa los mensajes sospechosos y neutraliza la amenaza introduciendo la palabra clave correcta.","tipo":"enlace_externo","correos":[{"remitente":"soporte@instagram-verificacion.com","asunto":"Tu cuenta será eliminada en 24h","es_amenaza":true,"indicios":["Dominio que imita a Instagram pero no es el oficial","Urgencia artificial (24h)","Enlace que no coincide con el dominio real"]},{"remitente":"noreply@instagram.com","asunto":"Nuevo inicio de sesión detectado","es_amenaza":false,"indicios":["Dominio oficial verificado","No pide contraseña por correo"]},{"remitente":"profesor.garcia@iescentro.edu","asunto":"Recordatorio examen del viernes","es_amenaza":false,"indicios":["Remitente del dominio educativo legítimo","Contenido coherente con el contexto escolar"]},{"remitente":"premios@regalo-exclusivo.net","asunto":"Has sido seleccionado para un premio","es_amenaza":true,"indicios":["Oferta no solicitada","Dominio genérico sin relación con ninguna marca real"]}],"flag":"INGENIERIA_SOCIAL","case_insensitive":true,"pistas":[{"nivel":1,"texto":"El phishing no solo depende de un enlace falso: también usa urgencia, miedo o premios para que la víctima actúe sin pensar. Eso forma parte de una técnica más amplia."},{"nivel":2,"texto":"Busca un correo que imite a una entidad real, presione al usuario y pida una acción peligrosa. La flag nombra la técnica general de manipular a personas para obtener información."}],"errores_comunes":[{"patron":"phishing","tipo":"termino_relacionado","mensaje":"Phishing es un ejemplo concreto. La flag pide el concepto más amplio que describe la manipulación de personas."},{"patron":"correo|instagram|soporte|email","tipo":"respuesta_descriptiva","mensaje":"No escribas el remitente ni una descripción. Escribe el nombre técnico de la técnica."}],"url_externa":"https://soniapalomo.github.io/RETOS-2-ESO/2RETO/","enlace_titulo":"Consola"},{"id":"2_3","orden":3,"categoria":"Ransomware","titulo":"Infección en el Aula","narrativa":"Un ordenador del aula de Alex muestra una cuenta atrás: un ransomware está cifrando trabajos, fotos y apuntes. Antes del bloqueo total, el equipo TIC captura procesos, conexiones y registros. Alex debe encontrar qué ejecutable está causando el cifrado.","enunciado":"Abre la página del incidente y analiza también las evidencias mostradas aquí. Identifica el ejecutable malicioso y escribe la flag que confirma la detección.","tipo":"paquete_recurso","logs":[{"nombre":"procesos.txt","contenido":"chrome.exe\nspotify.exe\ndiscord.exe\nexplorer.exe\nsvchost.exe\nruntimebroker.exe\nctfmon.exe\ntempcrypt.exe\nupdater.exe\nminecraftlauncher.exe\nnotepad.exe"},{"nombre":"registro_pid.txt","contenido":"chrome.exe → 1022\nspotify.exe → 2015\ndiscord.exe → 1350\nsvchost.exe → 0998\nruntimebroker.exe → 1775\nminecraftlauncher.exe → 3100\ntempcrypt.exe → 4421\nupdater.exe → 4550\nnotepad.exe → 5012\nexplorer.exe → 1111"},{"nombre":"conexiones_red.txt","contenido":"chrome.exe → google.com\nchrome.exe → youtube.com\ndiscord.exe → discord.com\nspotify.exe → spotify.com\nminecraftlauncher.exe → api.minecraft.net\nsvchost.exe → windows.microsoft.com\nruntimebroker.exe → windows-update.com\nupdater.exe → updates-service.net\ntempcrypt.exe → 185.77.42.11\nexplorer.exe → local"},{"nombre":"cifrado.txt","contenido":"Encryption service started\nEncrypting files...\nEncrypting examenes.docx\nEncrypting fotos_viaje.jpg\nEncrypting trabajo_historia.pdf\nEncryption running under process ID: 4421\nWarning: unknown process behavior detected"}],"flag":"R4NS0MW4R3_D3T3CT3D","case_insensitive":false,"pistas":[{"nivel":1,"texto":"En una investigación de ransomware no basta con mirar nombres raros. Hay que cruzar evidencias: qué proceso cifra archivos, qué PID tiene y si se conecta a destinos sospechosos."},{"nivel":2,"texto":"Localiza el PID que aparece en el registro de cifrado y búscalo en registro_pid. Después confirma si ese proceso también aparece con una conexión externa poco habitual."}],"errores_comunes":[{"patron":"chrome|spotify|discord|explorer|svchost|notepad","tipo":"proceso_legitimo","mensaje":"Ese proceso parece legítimo o habitual. Usa el PID del archivo de cifrado para encontrar el proceso responsable."},{"patron":"tempcrypt","tipo":"proceso_identificado","mensaje":"Has identificado el proceso sospechoso. Ahora necesitas escribir la flag que confirma la detección, no solo el nombre del ejecutable."}],"permitir_descarga":false,"recurso_desc":"Abre el escenario externo y cruza las evidencias internas: proceso, PID, conexiones y actividad de cifrado.","enlaces":[{"titulo":"Ransomware","url":"https://soniapalomo.github.io/RETOS-2-ESO/3RETO/"}],"previsualizaciones":[{"tipo":"texto","nombre":"procesos.txt","contenido":"Lista de procesos activos\n\nchrome.exe\nspotify.exe\ndiscord.exe\nexplorer.exe\nsvchost.exe\nruntimebroker.exe\nctfmon.exe\ntempcrypt.exe\nupdater.exe\nminecraftlauncher.exe\nnotepad.exe","grande":true},{"tipo":"texto","nombre":"registro_pid.txt","contenido":"Running Process IDs\n\nchrome.exe -> 1022\nspotify.exe -> 2015\ndiscord.exe -> 1350\nsvchost.exe -> 0998\nruntimebroker.exe -> 1775\nminecraftlauncher.exe -> 3100\ntempcrypt.exe -> 4421\nupdater.exe -> 4550\nnotepad.exe -> 5012\nexplorer.exe -> 1111","grande":true},{"tipo":"texto","nombre":"conexiones_red.txt","contenido":"Conexiones establecidas\n\nchrome.exe -> google.com\nchrome.exe -> youtube.com\nchrome.exe -> fonts.googleapis.com\n\ndiscord.exe -> discord.com\ndiscord.exe -> cdn.discord.com\n\nspotify.exe -> spotify.com\n\nminecraftlauncher.exe -> api.minecraft.net\n\nsvchost.exe -> windows.microsoft.com\nruntimebroker.exe -> windows-update.com\n\nupdater.exe -> updates-service.net\ntempcrypt.exe -> 185.77.42.11\n\nexplorer.exe -> local","grande":true},{"tipo":"texto","nombre":"cifrado.txt","contenido":"Encryption service started\n\nEncrypting files...\n\nEncrypting examenes.docx\nEncrypting fotos_viaje.jpg\nEncrypting trabajo_historia.pdf\n\nEncryption running under process ID:\n\n4421\n\nWarning: unknown process behavior detected","grande":true}]},{"id":"2_4","orden":4,"categoria":"Malware / Troyanos","titulo":"El Gancho Perfecto","narrativa":"Un compañero de Alex encuentra un supuesto generador de monedas gratis para su juego favorito. El manual pide desactivar el antivirus: una señal de alarma enorme. Tras ejecutarlo, el programa empieza a comportarse de forma sospechosa y deja una clave de recuperación.","enunciado":"Abre la página del reto y revisa el manual mostrado aquí. Descifra la palabra oculta y escríbela como flag.","tipo":"paquete_recurso","manual":"MANUAL DE INSTALACIÓN DEL GENERADOR DE MONEDAS\n\nSigue estos pasos para evitar que tu antivirus borre el programa ejecutable:\n1. Desactiva el escudo en tiempo real.\n2. Abre el archivo de juego adjunto en tu navegador.\n3. No sospeches si la pantalla cambia de color.\n\nSi el programa falla, el troyano genera esta clave numérica: 20-18-15-10-1-14","alfabeto":"A=1 B=2 C=3 D=4 E=5 F=6 G=7 H=8 I=9 J=10 K=11 L=12 M=13 N=14 O=15 P=16 Q=17 R=18 S=19 T=20 U=21 V=22 W=23 X=24 Y=25 Z=26","flag":"TROJAN","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Un troyano suele disfrazarse de programa útil para que la víctima lo ejecute voluntariamente. En este reto, fíjate en la clave numérica que deja el atacante y usa la tabla del manual para traducirla."},{"nivel":2,"texto":"Convierte cada número de la clave en una letra usando la posición del abecedario. Por ejemplo, 20 corresponde a T y 18 corresponde a R. Sigue la secuencia completa."}],"errores_comunes":[{"patron":"[0-9]+","tipo":"sin_descifrar","mensaje":"Has escrito la clave numérica sin descifrar. Convierte cada número a su letra correspondiente."},{"patron":"malware|virus|troyano","tipo":"termino_no_flag","mensaje":"Vas en la idea correcta, pero la flag usa el término técnico en inglés que obtienes al descifrar la clave."}],"permitir_descarga":false,"recurso_desc":"Abre el escenario externo y usa el manual como tabla de conversión. No necesitas descargar el archivo de instrucciones.","enlaces":[{"titulo":"Recompensa Gratis","url":"https://soniapalomo.github.io/RETOS-2-ESO/4RETO/"}],"previsualizaciones":[{"tipo":"texto","nombre":"Instrucciones.txt","contenido":"MANUAL DE INSTALACION DEL GENERADOR DE MONEDAS\n\nSi estás leyendo esto, es porque quieres recursos gratis para tus juegos.\nSigue estos pasos para evitar que tu antivirus borre el programa ejecutable:\n\n1. Desactiva el escudo en tiempo real de tu ordenador.\n2. Abre el archivo de juego adjunto en tu navegador web.\n3. No sospeches si la pantalla cambia de color, es parte de la carga.\n\nNOTAS DEL desarrollador\n\nSi el programa falla, el Troyano genera una Clave de Acceso numérica.\nCada número corresponde a la posición de una letra en el Abecedario Oficial A-Z:\n\nA=1, B=2, C=3, D=4, E=5, F=6, G=7, H=8, I=9, J=10,\nK=11, L=12, M=13, N=14, O=15, P=16, Q=17, R=18, S=19, T=20,\nU=21, V=22, W=23, X=24, Y=25, Z=26","grande":true}]},{"id":"2_5","orden":5,"categoria":"Spoofing","titulo":"Interceptación en la Red","narrativa":"El ordenador del profesor sube calificaciones al servidor central. Un atacante en la red local intenta suplantar una respuesta de red para desviar el tráfico hacia su propia máquina. Alex debe activar defensas sin cortar la comunicación legítima.","enunciado":"Abre el panel interactivo externo, activa exactamente la combinación correcta y escribe la flag obtenida.","tipo":"enlace_externo","botones":[{"id":"b1","texto":"Bloquear todo el tráfico UDP del puerto 53","correcto":false},{"id":"b2","texto":"Añadir entrada DNS estática: servidor-notas.ies → 192.168.1.10","correcto":true},{"id":"b3","texto":"Reiniciar todos los equipos de la red","correcto":false},{"id":"b4","texto":"Activar DNSSEC: verificar firmas digitales en respuestas DNS","correcto":true}],"flag":"SPOOFING","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Descarta conectores que no sirven para comunicar equipos en la red local del centro: HDMI y jack de audio transportan imagen o sonido, y USB-C o Bluetooth no son la infraestructura cableada habitual de una red de aula."},{"nivel":2,"texto":"Necesitas combinar la infraestructura física de red cableada local del centro con el protocolo global de navegación web segura y cifrada. Descarta HTTP y FTP porque no protegen la comunicación igual."}],"errores_comunes":[{"patron":"dns|ip|servidor","tipo":"respuesta_descriptiva","mensaje":"No escribas una descripción del ataque. Debes obtener la flag desde el panel interactivo."},{"patron":".*","tipo":"flag_incorrecta","mensaje":"Revisa que hayas activado exactamente las defensas correctas en el panel externo."}],"url_externa":"https://soniapalomo.github.io/RETOS-2-ESO/5RETO/","enlace_titulo":"Panel Spoofing"}]};
+
+COURSES['3eso'] = {"id":"3eso","nombre":"3º ESO","titulo":"Ingeniería Social, criptografía y análisis forense","intro":"Alex ya no solo detecta riesgos evidentes: ahora investiga correos que suplantan servicios reales, mensajes codificados y archivos con información oculta. En 3º ESO tendrá que comprobar antes de confiar y analizar evidencias como un pequeño equipo forense.","retos":[{"id":"3_1","orden":1,"categoria":"Ingeniería Social","titulo":"Cuidado con el Anzuelo","narrativa":"Un profesor del instituto recibe un correo alarmante sobre actividad sospechosa en su cuenta. El mensaje intenta asustarlo para que pulse rápido y entregue sus credenciales. Antes de escribir su contraseña, recuerda las recomendaciones de Alex y pide ayuda.","enunciado":"Abre el correo y la página de destino. Investiga la página como analista web y escribe la palabra clave del reto.","tipo":"enlace_externo","url_externa":"https://soniapalomo.github.io/RETOS-3-ESO/RETO1/","flag":"PHISHING","case_insensitive":true,"pistas":[{"nivel":1,"texto":"En este reto no basta con mirar la página por fuera. Aprieta el botón F12 del simulador y revisa el HTML en Elements/Elementos: en ciberseguridad también se inspecciona el código que carga una web."},{"nivel":2,"texto":"Si ves que la página carga un archivo JavaScript, revisa también otras pestañas de F12. Muchas webs dejan mensajes de depuración en la consola, y un analista debe comprobarlos antes de confiar."}],"errores_comunes":[{"patron":"microsoft|correo|email|cuenta","tipo":"respuesta_descriptiva","mensaje":"La respuesta no es el nombre de la empresa ni una descripción del correo. Busca el tipo de ataque."},{"patron":"estafa|fraude|engaño|engano","tipo":"termino_general","mensaje":"Vas en la idea correcta, pero se pide el nombre técnico de este tipo de suplantación."}],"enlace_titulo":"Correo"},{"id":"3_2","orden":2,"categoria":"Criptografía","titulo":"El Secreto del \"=\"","narrativa":"Durante una revisión de seguridad, Alex encuentra una cadena extraña en los registros del servidor. No parece una palabra normal: termina con un símbolo que suele aparecer en ciertas codificaciones usadas para transportar datos como texto.","enunciado":"Observa el texto capturado en pantalla. Elige primero qué tipo de transformación tiene sentido y después descifra el contenido. Probar opciones al azar se considerará un error de análisis y puede quitar estrellas.","tipo":"paquete_recurso","datos":{"texto_cifrado":"Q0lCRVJTRUdVUklEQUQ=","pista_formato":"El símbolo '=' al final es característico de la codificación Base64."},"flag":"CIBERSEGURIDAD","case_insensitive":true,"pistas":[{"nivel":1,"texto":"No todo texto extraño está cifrado: a veces está codificado. El símbolo igual al final puede ser relleno de una codificación muy usada para representar datos binarios como texto."},{"nivel":2,"texto":"El símbolo = al final suele aparecer en Base64. Usa un decodificador Base64, pega la cadena completa y lee el texto resultante."}],"errores_comunes":[{"patron":"Q0lCRVJTRUdVUklEQUQ","tipo":"sin_decodificar","mensaje":"Eso es el texto capturado, no el resultado. Debes decodificarlo primero."},{"patron":"base64","tipo":"nombre_tecnica","mensaje":"Base64 es la técnica, pero la flag es el texto obtenido al decodificar."}],"permitir_descarga":false,"recurso_desc":"Texto capturado por el equipo TIC. No necesitas descargar nada.","previsualizaciones":[{"tipo":"texto","nombre":"RETO2.txt","contenido":"Q0lCRVJTRUdVUklEQUQ=","grande":true}]},{"id":"3_3","orden":3,"categoria":"Phishing","titulo":"El Dominio Clonado","narrativa":"Un alumno recibe un aviso de un supuesto documento compartido por OneDrive. La página parece familiar, pero Alex sabe que en los ataques de phishing siempre hay algún detalle que rompe la confianza.","enunciado":"Abre el correo externo y encuentra el elemento que demuestra que no es fiable. Escríbelo tal como aparece.","tipo":"enlace_externo","url_externa":"https://soniapalomo.github.io/RETOS-3-ESO/RETO3/","flag":"microsoft-documentos.com","case_insensitive":true,"pistas":[{"nivel":1,"texto":"En phishing, una diferencia pequeña en el dominio cambia todo. No es lo mismo microsoft.com que una dirección con palabras añadidas, guiones o extensiones sospechosas."},{"nivel":2,"texto":"Pasa el cursor o revisa el enlace antes de confiar. Busca una dirección que incluya la marca, pero que no sea el dominio oficial real."}],"errores_comunes":[{"patron":"microsoft.com|onedrive|live.com","tipo":"dominio_legitimo","mensaje":"Ese dominio parece legítimo. Busca el dominio que imita a Microsoft pero añade otra palabra o estructura."}],"enlace_titulo":"Correo OneDrive"},{"id":"3_4","orden":4,"categoria":"Cifrado César","titulo":"El Cifrado Secreto","narrativa":"En un equipo del laboratorio aparece una nota residual dejada por un intruso. Alex descubre que no es una contraseña aleatoria: parece un mensaje oculto con una técnica clásica de criptografía.","enunciado":"Analiza el texto cifrado de la tarjeta. Averigua cómo transformarlo y escribe el mensaje descifrado.","tipo":"paquete_recurso","datos":{"texto_cifrado":"SURWHFFLRQGHGDWRV","primera_letra_cifrada":"S"},"flag":"PROTECCIONDEDATOS","case_insensitive":true,"pistas":[{"nivel":1,"texto":"El cifrado César mueve cada letra del alfabeto siempre el mismo número de posiciones. Si descubres cuántas posiciones se ha movido una letra, puedes aplicar el mismo cambio al resto del mensaje."},{"nivel":2,"texto":"La primera letra cifrada es S y el mensaje real empieza por P. Cuenta cuántas posiciones hay que retroceder y aplica ese mismo retroceso a todo el texto."}],"errores_comunes":[{"patron":"SURWHFFLRQGHGDWRV","tipo":"sin_descifrar","mensaje":"Ese es el texto cifrado original. Aplica el desplazamiento César antes de responder."},{"patron":"cesar|caesar|desplazamiento","tipo":"nombre_tecnica","mensaje":"La técnica es correcta, pero se pide el mensaje descifrado."}],"permitir_descarga":false,"recurso_desc":"Texto encontrado durante el análisis.","previsualizaciones":[{"tipo":"texto","nombre":"RETO4.txt","contenido":"SURWHFFLRQGHGDWRV","grande":true}]},{"id":"3_5","orden":5,"categoria":"Análisis Forense","titulo":"Más allá de los Píxeles","narrativa":"Alguien ha modificado una imagen del concurso de fotografía matemática del instituto. A simple vista parece normal, pero Alex sospecha que contiene información escondida en sus metadatos.","enunciado":"Observa la imagen y revisa la ventana de propiedades simulada como evidencia digital. Encuentra la contraseña oculta e introdúcela.","tipo":"paquete_recurso","recurso_descargable":"uploads/60c68994c0e4e3547ed90daf169cd64f/concurso.jpg","flag":"FORENSE2026!","case_insensitive":true,"pistas":[{"nivel":1,"texto":"No te quedes solo con lo que se ve en la imagen. Abre la pestaña Detalles de la ventana de propiedades: muchas fotos guardan metadatos como fecha, cámara, autor o comentarios internos."},{"nivel":2,"texto":"Dentro de Propiedades, revisa la pestaña Detalles. Busca una cadena que no parezca un dato normal de cámara o fecha; si parece una contraseña, copia todos sus caracteres."}],"errores_comunes":[{"patron":"DRAGON2026","tipo":"cadena_no_relacionada","mensaje":"Esa cadena aparece en los metadatos, pero no corresponde a la contraseña del análisis forense."},{"patron":"^[a-zA-Z ]+$","tipo":"formato_incompleto","mensaje":"La contraseña incluye números y un símbolo. Copia todos los caracteres relevantes."}],"permitir_descarga":false,"recurso_desc":"Revisa la imagen del concurso y sus propiedades simuladas.","previsualizaciones":[{"tipo":"imagen","nombre":"concurso.jpg","url":"uploads/60c68994c0e4e3547ed90daf169cd64f/concurso.jpg","descripcion":"Imagen del concurso para analizar"}]}]};
+COURSES['4eso'] = {"id":"4eso","nombre":"4º ESO","titulo":"Hacking ético y Seguridad Web","intro":"Alex está en 4º ESO y trabaja como auditor junior del instituto. Ahora analiza logs, formularios vulnerables, almacenamiento del navegador, reconocimiento web y fallos XSS desde una perspectiva de hacking ético.","retos":[{"id":"4_1","orden":1,"categoria":"Análisis de Logs","titulo":"Rastreando los Logs","narrativa":"De madrugada saltan las alarmas del servidor del instituto. Alex recibe un fragmento de logs y debe reconstruir qué IP insistió hasta conseguir entrar y acceder a información sensible.","enunciado":"Analiza el registro en pantalla y escribe la IP que corresponde al atacante principal.","tipo":"paquete_recurso","permitir_descarga":false,"recurso_desc":"Registro aislado por el equipo TIC. Revisa patrones de intentos fallidos, acceso correcto y acciones posteriores.","previsualizaciones":[{"tipo":"texto","nombre":"logs.txt","contenido":"192.168.1.10 - LOGIN usuario=profesor código=401\n192.168.1.10 - LOGIN usuario=profesor código=401\n192.168.1.10 - LOGIN usuario=profesor código=401\n\n192.168.1.12 - LOGIN usuario=secretaria código=200\n192.168.1.12 - GET /alumnos.csv código=200\n192.168.1.12 - GET /contactos_familias.xlsx código=200\n\n172.16.0.5 - LOGIN usuario=coordinador código=401\n172.16.0.5 - LOGIN usuario=coordinador código=401\n172.16.0.5 - LOGIN usuario=coordinador código=401\n172.16.0.5 - LOGIN usuario=coordinador código=401\n172.16.0.5 - LOGIN usuario=coordinador código=200\n172.16.0.5 - GET /inventario.xlsx código=200\n172.16.0.5 - OPEN /contrasenas_2025.txt código=200\n172.16.0.5 - LOGOUT\n\n192.168.1.22 - LOGIN usuario=orientadora código=200\n192.168.1.22 - GET /informes_psicopedagogicos.pdf código=200\n\n10.10.10.5 - LOGIN usuario=director código=401\n10.10.10.5 - LOGIN usuario=director código=401\n10.10.10.5 - LOGIN usuario=director código=401\n10.10.10.5 - LOGIN usuario=director código=401\n10.10.10.5 - LOGIN usuario=director código=401\n10.10.10.5 - LOGIN usuario=director código=401\n10.10.10.5 - LOGIN usuario=director código=401\n10.10.10.5 - LOGIN usuario=director código=401\n10.10.10.5 - LOGIN usuario=director código=200\n10.10.10.5 - GET /calendario_escolar.pdf código=200\n10.10.10.5 - DOWNLOAD /contrasenas_2026.xlsx código=200\n10.10.10.5 - GET /presupuesto.xlsx código=200\n10.10.10.5 - LOGOUT\n\n172.20.1.15 - LOGIN usuario=admin código=401\n172.20.1.15 - LOGIN usuario=admin código=401\n172.20.1.15 - LOGIN usuario=admin código=401\n172.20.1.15 - LOGIN usuario=admin código=401\n172.20.1.15 - LOGIN usuario=admin código=401\n172.20.1.15 - GET /login código=200\n172.20.1.15 - GET /ayuda código=200","grande":true}],"flag":"10.10.10.5","case_insensitive":true,"pistas":[{"nivel":1,"texto":"En logs de acceso, muchos códigos 401 seguidos suelen indicar intentos fallidos. Un código 200 después de varios 401 puede mostrar que el atacante finalmente entró."},{"nivel":2,"texto":"No te quedes solo con quien falla muchas veces: busca también qué IP, después de entrar, accede o descarga archivos especialmente sensibles."}],"errores_comunes":[{"patron":"172.16.0.5|192.168.1.10|172.20.1.15","tipo":"ip_sospechosa_no_principal","mensaje":"Esa IP tiene actividad sospechosa, pero revisa cuál accede a un archivo de contraseñas tras muchos intentos fallidos."},{"patron":"192.168.1.12|192.168.1.22","tipo":"ip_legitima","mensaje":"Esa IP parece actividad normal. Busca una secuencia de fuerza bruta seguida de acceso a información sensible."}]},{"id":"4_2","orden":2,"categoria":"SQL Injection","titulo":"Rompiendo la Base de Datos","narrativa":"El departamento TIC prueba un nuevo panel restringido. Alex sospecha que el formulario de acceso tiene algún fallo de seguridad web que podría permitir entrar sin credenciales reales.","enunciado":"Abre el Panel TIC, prueba el formulario como auditor y escribe la flag que obtengas al demostrar el fallo.","tipo":"enlace_externo","url_externa":"https://soniapalomo.github.io/RETOS-4-ESO/1RETO/","enlace_titulo":"Panel TIC","flag":"SQLINJECTION","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Una inyección SQL ocurre cuando una entrada del formulario se mezcla con una consulta a la base de datos sin validarse bien. El objetivo del auditor es demostrar el fallo, no adivinar una contraseña."},{"nivel":2,"texto":"Piensa en una condición que siempre sea verdadera dentro de una consulta SQL. Los comentarios SQL también pueden servir para ignorar el resto de la comprobación."}],"errores_comunes":[{"patron":"admin|root|password|contraseña|contrasena","tipo":"credencial_comun","mensaje":"No se trata de adivinar credenciales. Busca manipular la consulta que válida el acceso."}]},{"id":"4_3","orden":3,"categoria":"Seguridad Web","titulo":"El Token de Navegador","narrativa":"Un portal del instituto identifica a Alex como invitado. La página parece bloquear documentos confidenciales, pero Alex sospecha que el rol del usuario se guarda en el propio navegador.","enunciado":"Abre el portal, revisa cómo guarda la sesión el navegador y consigue acceder como administrador para obtener la flag.","tipo":"enlace_externo","url_externa":"https://soniapalomo.github.io/RETOS-4-ESO/2RETO/","enlace_titulo":"Portal Web","flag":"LOCAL_STORAGE","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Las herramientas de desarrollador permiten revisar datos que una página guarda en el navegador. En aplicaciones web sencillas, a veces el rol del usuario queda en almacenamiento local."},{"nivel":2,"texto":"En F12, revisa la pestaña Application/aplicación. Busca una clave relacionada con usuario, rol o permisos y piensa qué valor esperaría ver un administrador."}],"errores_comunes":[{"patron":"cookie|cookies","tipo":"almacenamiento_equivocado","mensaje":"Las cookies son una posibilidad, pero en este reto conviene revisar el almacenamiento local del navegador."}]},{"id":"4_4","orden":4,"categoria":"Reconocimiento","titulo":"El Archivo del Robot","narrativa":"El administrador cree haber ocultado un panel eliminando enlaces visibles desde la portada. Alex sabe que el reconocimiento web también consiste en revisar archivos públicos que dan pistas sobre rutas internas.","enunciado":"Abre el portal y usa la información mostrada en pantalla para encontrar el panel oculto. Escribe la flag obtenida.","tipo":"paquete_recurso","permitir_descarga":false,"recurso_desc":"El archivo robots.txt se muestra aquí y también puedes visitar el portal externo.","enlaces":[{"titulo":"Portal del Centro","url":"https://soniapalomo.github.io/RETOS-4-ESO/3RETO/"}],"previsualizaciones":[{"tipo":"texto","nombre":"robots.txt","contenido":"User-agent: *\nDisallow: /panel_secreto","grande":true}],"flag":"RUTA_OCULTA","case_insensitive":true,"pistas":[{"nivel":1,"texto":"robots.txt no protege páginas: solo indica a buscadores que rutas no deberían indexar. Cualquiera puede leerlo si conoce la ruta."},{"nivel":2,"texto":"Busca en el archivo la ruta que el administrador quería ocultar a los buscadores. Si encuentras una ruta interna, añádela al final de la URL base del portal."}],"errores_comunes":[{"patron":"robots|robot","tipo":"archivo_no_flag","mensaje":"robots.txt es la pista, pero la flag está en la ruta oculta que descubres a partir de él."}]},{"id":"4_5","orden":5,"categoria":"XSS","titulo":"El Eco Malicioso","narrativa":"La tienda online del instituto refleja en pantalla lo que el usuario escribe en su buscador. Alex debe comprobar si la página filtra bien el contenido o si permite inyectar etiquetas y código.","enunciado":"Abre la tienda online en el visor integrado, prueba el buscador de forma controlada y escribe la flag que aparezca al demostrar el fallo. Si necesitas reiniciar la página del reto, usa el botón Inicio del visor.","tipo":"enlace_externo","url_externa":"https://soniapalomo.github.io/RETOS-4-ESO/4RETO/","enlace_titulo":"Tienda Online","flag":"XSS","case_insensitive":true,"pistas":[{"nivel":1,"texto":"Un XSS reflejado ocurre cuando la web devuelve lo que escribes sin filtrarlo. Empieza probando una etiqueta HTML sencilla para ver si se interpreta o solo se muestra como texto."},{"nivel":2,"texto":"Si la página interpreta HTML, prueba una carga JavaScript básica y segura de laboratorio, como una alerta. En una web real nunca se prueba esto sin permiso."}],"errores_comunes":[{"patron":"cross.site|crosssite|script","tipo":"concepto_o_payload","mensaje":"La idea es correcta, pero la flag es la abreviatura del fallo que se demuestra en el reto."}]}]};
+
+// ═══════════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════════
+const STATE = {
+  sessionId: null,
+  courseId: null,
+  course: null,
+  currentIdx: 0,
+  attempts: {},      // retoId → count
+  hintsUsed: {},     // retoId → [niveles usados]
+  confidence: {},    // retoId → 1-5
+  errorTypes: {},     // retoId → [{tipo, intento, confianza}]
+  completed: {},     // retoId → {stars, time, attempts, usedHint}
+  startTime: null,
+  retoStartTime: null,
+  timerInterval: null,
+  maxMinutes: 45,
+  metrics: []        // array of events for analysis
+};
+
+// ═══════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════
+function init() {
+  STATE.sessionId = 'ses_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  renderCourseGrid();
+}
+
+function renderCourseGrid() {
+  const grid = document.getElementById('course-grid');
+  const courseList = [
+    { id: '1eso', icon: '🌱', color: '#10b981' },
+    { id: '2eso', icon: '⚡', color: '#f59e0b' },
+    { id: '3eso', icon: '🔐', color: '#7c3aed' },
+    { id: '4eso', icon: '🎯', color: '#ef4444' }
+  ];
+  grid.innerHTML = courseList.map(c => {
+    const course = COURSES[c.id];
+    return `
+    <div class="course-card" onclick="selectCourse('${c.id}')">
+      <div class="course-year" style="color:${c.color}">${c.icon} ${course.nombre}</div>
+      <div class="course-title">${course.titulo}</div>
+      <div class="course-desc">${course.intro.substring(0, 100)}...</div>
+      <div class="course-retos">
+        <span style="color:${c.color}">●</span> ${course.retos.length} retos · 45 min
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectCourse(courseId) {
+  STATE.courseId = courseId;
+  STATE.course = COURSES[courseId];
+  STATE.attempts = {};
+  STATE.hintsUsed = {};
+  STATE.confidence = {};
+  STATE.errorTypes = {};
+  STATE.completed = {};
+  STATE.metrics = [];
+
+  document.getElementById('intro-course-name').textContent = STATE.course.nombre;
+  document.getElementById('intro-title').textContent = STATE.course.titulo;
+  document.getElementById('intro-narrative').textContent = STATE.course.intro;
+  document.getElementById('intro-num-retos').textContent = STATE.course.retos.length;
+
+  showScreen('intro');
+}
+
+function startChallenge() {
+  STATE.currentIdx = 0;
+  STATE.startTime = Date.now();
+  STATE.retoStartTime = Date.now();
+  logEvent('session_start', { course: STATE.courseId });
+
+  showScreen('challenge');
+  renderSidebar();
+  renderChallenge();
+  startTimer();
+}
+
+// ═══════════════════════════════════════════════════
+//  TIMER
+// ═══════════════════════════════════════════════════
+function startTimer() {
+  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+  STATE.timerInterval = setInterval(updateTimer, 1000);
+  updateTimer();
+}
+
+function updateTimer() {
+  const elapsed = Math.floor((Date.now() - STATE.startTime) / 1000);
+  const max = STATE.maxMinutes * 60;
+  const remaining = Math.max(0, max - elapsed);
+  const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+  const s = (remaining % 60).toString().padStart(2, '0');
+  const el = document.getElementById('timer-display');
+  el.textContent = `⏱ ${m}:${s}`;
+  el.className = 'timer-badge' + (remaining < 300 ? ' danger' : remaining < 600 ? ' warning' : '');
+  if (remaining === 0) {
+    clearInterval(STATE.timerInterval);
+    showResults(true);
+  }
+}
+
+function getElapsedSecs() {
+  return Math.floor((Date.now() - STATE.startTime) / 1000);
+}
+
+function formatTime(secs) {
+  const m = Math.floor(secs / 60);
+  const s = secs % 60;
+  return m > 0 ? `${m}m ${s}s` : `${s}s`;
+}
+
+// ═══════════════════════════════════════════════════
+//  SCREENS
+// ═══════════════════════════════════════════════════
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen-' + name).classList.add('active');
+}
+
+function goHome() {
+  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+  showScreen('welcome');
+}
+
+// ═══════════════════════════════════════════════════
+//  SIDEBAR
+// ═══════════════════════════════════════════════════
+function renderSidebar() {
+  const retos = STATE.course.retos;
+  const sb = document.getElementById('sidebar');
+  sb.innerHTML = `<div class="sidebar-title">Misiones</div>` + retos.map((r, i) => {
+    const done = STATE.completed[r.id];
+    const isCurrent = i === STATE.currentIdx;
+    let stars = '';
+    if (done) stars = '★'.repeat(done.stars) + '☆'.repeat(3 - done.stars);
+    return `
+    <div class="sidebar-item ${isCurrent ? 'current' : ''} ${done ? 'completed' : ''}" onclick="jumpTo(${i})">
+      <div class="sidebar-num">${done ? '✓' : (i + 1)}</div>
+      <div class="sidebar-info">
+        <div class="sidebar-reto-title">${r.titulo}</div>
+        <div class="sidebar-cat">${r.categoria}</div>
+      </div>
+      ${done ? `<div class="sidebar-stars" style="color:var(--star)">${stars}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function jumpTo(idx) {
+  // Only allow jumping to completed or current
+  const reto = STATE.course.retos[idx];
+  if (STATE.completed[reto.id] || idx <= STATE.currentIdx) {
+    STATE.currentIdx = idx;
+    STATE.retoStartTime = Date.now();
+    renderSidebar();
+    renderChallenge();
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  PROGRESS
+// ═══════════════════════════════════════════════════
+function updateProgress() {
+  const total = STATE.course.retos.length;
+  const done = Object.keys(STATE.completed).length;
+  const pct = Math.round((done / total) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `Reto ${STATE.currentIdx + 1} de ${total}`;
+  document.getElementById('progress-pct').textContent = pct + '%';
+}
+
+// ═══════════════════════════════════════════════════
+//  CHALLENGE RENDER
+// ═══════════════════════════════════════════════════
+function renderChallenge() {
+  const reto = STATE.course.retos[STATE.currentIdx];
+  const main = document.getElementById('challenge-main');
+  updateProgress();
+
+  const isDone = STATE.completed[reto.id];
+  const attempts = STATE.attempts[reto.id] || 0;
+
+  let contentHTML = buildContentHTML(reto, isDone);
+  let hintsHTML = buildHintsHTML(reto, isDone);
+  let answerHTML = buildAnswerHTML(reto, isDone);
+  main.innerHTML = `
+  <div class="fade-in">
+    <div class="challenge-header-meta">
+      <span class="cat-badge">${reto.categoria}</span>
+      <span class="reto-num">Reto ${reto.orden} de ${STATE.course.retos.length}</span>
+      ${attempts > 0 ? `<span class="attempts-counter">${attempts} intento${attempts > 1 ? 's' : ''}</span>` : ''}
+      ${isDone ? `<span class="tag tag-success">✓ Completado — ${'★'.repeat(isDone.stars)}</span>` : ''}
+    </div>
+    <h2 class="challenge-title-text">${reto.titulo}</h2>
+    <div class="action-row" style="margin-bottom:12px">
+      <button class="btn btn-speak" onclick="speakCurrent()">🔊 Escuchar enunciado</button>
+    </div>
+    <div class="narrative-box">
+      <div class="narrative-label">📖 Narrativa</div>
+      <div class="narrative-text" id="narrative-text">${reto.narrativa}</div>
+    </div>
+    <div class="enunciado-box">
+      <div class="enunciado-label">🎯 Tu misión</div>
+      <div class="enunciado-text" id="enunciado-text">${reto.enunciado.replace(/\n/g,'<br>')}</div>
+    </div>
+    ${contentHTML}
+    ${hintsHTML}
+    ${answerHTML}
+  </div>`;
+
+  // Post-render setup
+  setupInteractivity(reto, isDone);
+}
+
+// ═══════════════════════════════════════════════════
+//  CONTENT HTML BUILDERS
+// ═══════════════════════════════════════════════════
+function buildContentHTML(reto, isDone) {
+  switch (reto.tipo) {
+    case 'analisis_log':
+    case 'analisis_forense':
+      return buildLogHTML(reto);
+    case 'comparador_urls':
+      return buildURLComparadorHTML(reto, isDone);
+    case 'comparador_imagenes':
+      return buildImageComparadorHTML(reto, isDone);
+    case 'rompecabezas_texto':
+      return buildPuzzleHTML(reto);
+    case 'simulador_movil':
+      return buildSimuladorMovilHTML(reto, isDone);
+    case 'consola_correos':
+      return buildCorreosHTML(reto, isDone);
+    case 'auditoria_noticia':
+      return buildAuditoriaHTML(reto, isDone);
+    case 'descifrado_numerico':
+      return buildDescifradoNumericoHTML(reto);
+    case 'panel_interactivo':
+      return buildPanelInteractivoHTML(reto, isDone);
+    case 'descifrado':
+      return buildDescifradoHTML(reto);
+    case 'descifrado_cesar':
+      return buildDescifradoCesarHTML(reto);
+    case 'enlace_externo':
+      return buildEnlaceExternoHTML(reto);
+    case 'enlaces_externos':
+      return buildEnlacesExternosHTML(reto);
+    case 'imagen_recurso':
+      return buildImagenRecursoHTML(reto);
+    case 'paquete_recurso':
+      return buildPaqueteRecursoHTML(reto);
+    case 'esteganografia':
+      return buildEsteganografiaHTML(reto);
+    case 'imagen_embebida':
+      return buildImagenEmbebidaHTML(reto);
+    default:
+      return '';
+  }
+}
+
+function buildLogHTML(reto) {
+  const tabs = reto.logs.map((l, i) =>
+    `<button class="log-tab ${i === 0 ? 'active' : ''}" onclick="showLogTab(${i})">${l.nombre}</button>`
+  ).join('');
+  const contents = reto.logs.map((l, i) =>
+    `<div class="log-viewer" id="log-tab-${i}" style="display:${i === 0 ? 'block' : 'none'};border-radius:0 0 ${i===reto.logs.length-1?'var(--radius)':'0'} var(--radius)">${escHtml(l.contenido)}</div>`
+  ).join('');
+  return `<div style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;">
+    <div class="log-tabs">${tabs}</div>${contents}</div>`;
+}
+
+function buildURLComparadorHTML(reto, isDone) {
+  return `<div class="urls-list" id="url-list">` +
+    reto.opciones.map(op => `
+    <div class="url-item ${isDone && op.legitima ? 'revealed' : ''}" id="url-${op.url.replace(/[^a-z]/gi,'')}" onclick="revealURL(this, ${JSON.stringify(op)})">
+      <div class="url-domain">🔗 ${op.url}</div>
+      <div class="url-pista">${op.pista_visual}</div>
+      ${op.legitima ? `<div class="url-flag">✓ Sitio oficial — Flag: <strong>${op.flag_visible}</strong></div>` : ''}
+    </div>`).join('') + `</div>`;
+}
+
+function buildImageComparadorHTML(reto, isDone) {
+  return `<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;" id="img-grid">` +
+    reto.imagenes.map(img => `
+    <div class="app-item ${isDone && img.es_correcta ? 'maliciosa-selected' : ''}"
+         onclick="selectImagen('${img.id}', ${JSON.stringify(img)})" id="img-${img.id}">
+      <div style="font-size:32px;margin-bottom:8px;">${img.emoji}</div>
+      <div class="app-name">Imagen ${img.id.toUpperCase()}</div>
+      <div class="app-permisos">${img.descripcion}</div>
+      ${isDone && img.es_correcta ? `<div style="color:var(--success);font-size:12px;margin-top:6px;">✓ Flag: ${img.flag_visible}</div>` : ''}
+    </div>`).join('') + `</div>`;
+}
+
+function buildPuzzleHTML(reto) {
+  return `<div class="piezas-list">` +
+    reto.piezas_libreta.map((p, i) => `
+    <div class="pieza-item">
+      <span class="pieza-num">${i + 1}</span>${p}
+    </div>`).join('') + `</div>`;
+}
+
+function buildSimuladorMovilHTML(reto, isDone) {
+  return `<div class="apps-grid" id="apps-grid">` +
+    reto.apps.map(app => `
+    <div class="app-item ${isDone && app.maliciosa ? 'maliciosa-selected' : ''}"
+         onclick="selectApp(this, ${JSON.stringify(app)})">
+      <div class="app-name">${app.maliciosa ? '⚠️ ' : ''}${app.nombre}</div>
+      <div class="app-permisos">Permisos: ${app.permisos.join(' · ')}
+        ${isDone && app.maliciosa ? `<br><span style="color:var(--success)">Flag: ${app.flag_visible}</span>` : ''}
+      </div>
+    </div>`).join('') + `</div>`;
+}
+
+function buildCorreosHTML(reto, isDone) {
+  return `<div>` +
+    reto.correos.map((c, i) => `
+    <div class="correo-item ${isDone && c.es_amenaza ? 'expanded' : ''}" onclick="toggleCorreo(this)">
+      <div class="correo-remitente">${c.remitente}</div>
+      <div class="correo-asunto">${c.asunto} ${c.es_amenaza ? '<span class="tag tag-warning">⚠ Sospechoso</span>' : '<span class="tag tag-success">✓ Legítimo</span>'}</div>
+      <div class="correo-indicios">📋 Indicios: ${c.indicios.join(' · ')}</div>
+    </div>`).join('') + `</div>`;
+}
+
+function buildAuditoriaHTML(reto, isDone) {
+  return `<div class="argumentos-list" id="argumentos-list">` +
+    reto.argumentos.map((a, i) => `
+    <div class="argumento-item ${isDone && a.es_indicio_falsedad ? 'selected' : ''}"
+         onclick="toggleArgumento(this, ${i})" data-idx="${i}">
+      <div class="argumento-check">${isDone && a.es_indicio_falsedad ? '✓' : ''}</div>
+      <div>${a.texto}</div>
+      ${a.letra && isDone ? `<span class="tag tag-info">${a.letra}</span>` : ''}
+    </div>`).join('') + `</div>`;
+}
+
+function buildDescifradoNumericoHTML(reto) {
+  const abc = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const cells = abc.split('').map((l, i) =>
+    `<div class="cipher-cell"><strong>${l}</strong><span>${i + 1}</span></div>`
+  ).join('');
+  return `
+  <div class="manual-text">${escHtml(reto.manual)}</div>
+  <div class="content-area" style="margin-top:12px">
+    <div class="content-label">Tabla de referencia: A=1, B=2... Z=26</div>
+    <div class="content-body">
+      <div class="cipher-grid">${cells}</div>
+    </div>
+  </div>`;
+}
+
+function buildPanelInteractivoHTML(reto, isDone) {
+  return `<div class="panel-btns" id="panel-btns">` +
+    reto.botones.map(b => `
+    <button class="panel-btn ${isDone && b.correcto ? 'active' : ''}"
+            id="pbtn-${b.id}" onclick="togglePanelBtn('${b.id}')">
+      ${b.texto}
+    </button>`).join('') + `</div>`;
+}
+
+function buildDescifradoHTML(reto) {
+  const frameId = `embedded-${reto.id}-decoder`;
+  const url = 'https://www.base64decode.org/';
+  return `
+  <div class="decoder-wrap">
+    <div class="content-label">Texto capturado (Base64)</div>
+    <div class="manual-text" style="margin-bottom:8px">${reto.datos.texto_cifrado}</div>
+    <div class="content-label">Herramienta de decodificación</div>
+    <button type="button" class="ext-link-btn" onclick="setEmbeddedFrame('${frameId}', ${jsArg(url)}, 'Decodificador Base64')">Abrir decodificador Base64</button>
+    ${buildEmbeddedBrowser(frameId, url, 'Decodificador Base64')}
+  </div>`;
+}
+
+function buildDescifradoCesarHTML(reto) {
+  const frameId = `embedded-${reto.id}-decoder`;
+  const url = 'https://www.dcode.fr/caesar-cipher';
+  return `
+  <div class="decoder-wrap">
+    <div class="content-label">Texto cifrado con César</div>
+    <div class="manual-text" style="margin-bottom:8px;font-size:18px;letter-spacing:3px">${reto.datos.texto_cifrado}</div>
+    <div class="content-label">Primera letra cifrada: ${reto.datos.primera_letra_cifrada}</div>
+    <button type="button" class="ext-link-btn" onclick="setEmbeddedFrame('${frameId}', ${jsArg(url)}, 'Decodificador César')">Abrir decodificador César</button>
+    ${buildEmbeddedBrowser(frameId, url, 'Decodificador César')}
+  </div>`;
+}
+
+function buildEnlaceExternoHTML(reto) {
+  if (reto.id === '3_1') return buildDevtoolsPhishingHTML();
+  if (reto.id === '4_3') return buildLocalStorageSimHTML();
+  let extraContent = '';
+  if (reto.datos && reto.datos.robots_txt) {
+    extraContent = `<div class="manual-text" style="margin-top:12px">${escHtml(reto.datos.robots_txt)}</div>`;
+  }
+  const frameId = `embedded-${reto.id}`;
+  const title = escHtml(reto.enlace_titulo || 'Recurso del reto');
+  const ocultarBotonAbrir = ['1_5', '1_6', '2_2', '2_5', '3_3', '4_2', '4_5'].includes(reto.id);
+  return `
+  <div class="ext-link-box">
+    <div class="ext-link-desc">Este recurso se abre aquí mismo para que no tengas que cambiar de pestaña.</div>
+    ${ocultarBotonAbrir ? '' : `<button type="button" class="ext-link-btn" onclick="setEmbeddedFrame('${frameId}', ${jsArg(reto.url_externa)}, ${jsArg(reto.enlace_titulo || 'Recurso del reto')})">Abrir ${title}</button>`}
+    ${extraContent}
+    ${buildEmbeddedBrowser(frameId, reto.url_externa, reto.enlace_titulo || 'Recurso del reto')}
+  </div>`;
+}
+
+function buildEnlacesExternosHTML(reto) {
+  const frameId = `embedded-${reto.id}`;
+  const first = (reto.enlaces || [])[0];
+  return `
+  <div class="content-area">
+    <div class="content-label">Recursos externos del reto</div>
+    <div class="content-body">
+      <div class="external-links-grid">
+        ${(reto.enlaces || []).map((link, i) => `
+        <button type="button" class="ext-link-btn" onclick="setEmbeddedFrame('${frameId}', ${jsArg(link.url)}, ${jsArg(link.titulo)})">
+          ${i + 1}. ${escHtml(link.titulo)}
+        </button>`).join('')}
+      </div>
+      ${first ? buildEmbeddedBrowser(frameId, first.url, first.titulo) : ''}
+    </div>
+  </div>`;
+}
+
+function buildEmbeddedBrowser(frameId, url, title) {
+  const sinScrollInterno = ['embedded-2_2'].includes(frameId);
+
+  return `
+  <div class="embedded-browser">
+    <div class="embedded-browser-bar">
+      <div class="embedded-browser-title" id="${frameId}-title">${escHtml(title || 'Recurso del reto')}</div>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button type="button" class="btn-sm-panel" onclick="setEmbeddedFrame('${frameId}', ${jsArg(url)}, ${jsArg(title || 'Recurso del reto')})">Inicio</button>
+      </div>
+    </div>
+    <iframe id="${frameId}" class="embedded-browser-frame
+  ${frameId === 'embedded-1_6' ? 'embedded-tall-1-6' :
+    frameId === 'embedded-2_4-links' ? 'embedded-tall-2-4' :
+    frameId === 'embedded-2_5' ? 'embedded-tall-2-5' : ''}"
+  src="${escAttr(url)}"
+  title="${escAttr(title || 'Recurso del reto')}"
+  tabindex="0"></iframe>
+  </div>
+  <div class="embedded-help">Si el recurso tarda unos segundos, espera a que termine de cargar dentro de este marco.</div>`;
+}
+
+function buildBase64DecoderSimHTML(reto) {
+  const encoded = reto.datos && reto.datos.texto_cifrado ? reto.datos.texto_cifrado : 'Q0lCRVJTRUdVUklEQUQ=';
+  return `
+  <div class="content-area">
+    <div class="content-label">Texto capturado</div>
+    <div class="content-body">
+      <div class="manual-text" style="font-size:18px;letter-spacing:1px">${escHtml(encoded)}</div>
+    </div>
+  </div>
+  <div class="sim-window">
+    <div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><div class="sim-url">Herramienta de análisis de codificación</div></div>
+    <div style="padding:16px;display:grid;gap:12px">
+      <label class="content-label" for="decoder-mode">Tipo de transformación</label>
+      <select id="decoder-mode" class="answer-input" style="max-width:280px">
+        <option value="hex">Hexadecimal</option>
+        <option value="base64">Base64</option>
+        <option value="rot13">ROT13</option>
+        <option value="bin">Binario</option>
+      </select>
+      <button type="button" class="ext-link-btn" onclick="runBase64Decoder(${jsArg(encoded)})">Decodificar</button>
+      <div class="manual-text" id="decoder-output">Selecciona una opción y decodifica el texto.</div>
+    </div>
+  </div>`;
+}
+
+function buildHiddenRouteSimHTML(reto) {
+  const robots = reto.datos && reto.datos.robots_txt ? reto.datos.robots_txt : 'User-agent: *\nDisallow: /panel_secreto';
+  return `
+  <div class="content-area">
+    <div class="content-label">robots.txt</div>
+    <div class="content-body">
+      <div class="manual-text">${escHtml(robots)}</div>
+    </div>
+  </div>
+  <div class="sim-window">
+    <div class="sim-window-bar">
+      <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+      <div class="sim-url" style="display:flex;align-items:center;gap:0">
+        <span>https://portal-centro.example</span>
+        <input id="hidden-route-input" value="/" aria-label="URL del portal" onkeydown="if(event.key==='Enter')checkHiddenRoute()" style="flex:1;border:0;background:transparent;color:inherit;font:inherit;outline:none;min-width:160px">
+      </div>
+      <button type="button" class="btn-sm-panel" onclick="checkHiddenRoute()">Ir</button>
+    </div>
+    <div class="sim-page">
+      <div style="background:white;max-width:800px;margin:0 auto 22px;padding:40px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,.18)">
+        <h1 style="color:#0078d4;margin-top:0">🌐 Portal del centro</h1>
+        <p>Bienvenido al sistema interno.</p>
+        <p style="margin-top:20px;color:#d13438;font-weight:bold">⚠️ Error 403: acceso denegado a /admin</p>
+        <p>No hay más información disponible.</p>
+      </div>
+      <div class="manual-text" id="hidden-route-output" style="margin-top:14px;background:#e2e8f0;color:#0f172a">Página principal del portal.</div>
+    </div>
+  </div>`;
+}
+
+function buildDevtoolsPhishingHTML() {
+  return buildDevtoolsPhishingFixedHTML();
+}
+
+function buildDevtoolsPhishingFixedHTML() {
+  return `
+  <div class="sim-window">
+    <div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><div class="sim-url" id="sim3-url">file:///RETO1/index.html</div><button type="button" class="btn-sm-panel" onclick="openSim3Index()">Inicio</button></div>
+    <div class="sim-page" id="sim3-page">
+      <div style="background:white;max-width:800px;margin:auto;padding:30px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,.18)">
+        <h1 style="margin-top:0">⚠️ Actividad sospechosa detectada</h1>
+        <p><strong>De:</strong> soporte@microsof-security.com</p>
+        <p>Hemos detectado actividad sospechosa en su cuenta Microsoft. Debe verificar sus datos inmediatamente o su cuenta será bloqueada.</p>
+        <button type="button" class="ext-link-btn" onclick="openSim3Login()">Verificar cuenta</button>
+        <p style="color:gray;font-size:12px;margin-top:30px">Mensaje automático del servicio de seguridad Microsoft.</p>
+      </div>
+    </div>
+    <button type="button" class="ext-link-btn" id="sim3-f12-btn" style="margin:12px" onclick="document.getElementById('devtools-3-1-static').style.display='block'">Abrir F12</button>
+    <div class="devtools" id="devtools-3-1-static" style="display:block">
+    ${buildDevtoolsTabs('devtools-3-1-inner', {
+      elements: [
+        '<!doctype html>',
+        '<html>',
+        '<head>',
+        '  <meta charset="UTF-8">',
+        '  <title>Actividad sospechosa detectada</title>',
+        '</head>',
+        '<body>',
+        '  <div class="container">',
+        '    <h1>⚠️ Actividad sospechosa detectada</h1>',
+        '    <p><strong>De:</strong> soporte@microsof-security.com</p>',
+        '    <p>Hemos detectado actividad sospechosa en su cuenta Microsoft.</p>',
+        '    <a class="boton" href="login3ESO.html">Verificar cuenta</a>',
+        '    <p>Mensaje automático del servicio de seguridad Microsoft.</p>',
+        '  </div>',
+        '  <span class="code-comment">&lt;!-- Revisa tambien los archivos cargados por la pagina de destino --&gt;</span>',
+        '  <span class="code-comment">&lt;!-- encrypted message --&gt;</span>',
+        '  <span class="code-comment">&lt;!-- UEhJU0hJTkc= --&gt;</span>',
+        '  <script src="login.js"><\\/script>',
+        '</body>',
+        '</html>'
+      ].join('\\n'),
+      sources: [
+        'Archivos cargados por la página',
+        '==============================',
+        '',
+        'index.html',
+        '---------',
+        '<!doctype html>',
+        '<html>',
+        '<head>',
+        '  <title>Actividad sospechosa detectada</title>',
+        '</head>',
+        '<body>',
+        '<a class="boton" href="login3ESO.html">Verificar cuenta</a>',
+        '</body>',
+        '</html>',
+        '',
+        'login3ESO.html',
+        '--------------',
+        '<!doctype html>',
+        '<html>',
+        '<head>',
+        '  <meta charset="UTF-8">',
+        '  <title>Login Microsoft</title>',
+        '  <script src="login.js"><\\/script>',
+        '</head>',
+        '<body>',
+        '  <div class="container">',
+        '    <h2>Iniciar sesión</h2>',
+        '    <p class="url">http://microsof-security-login.ru</p>',
+        '    <input type="text" placeholder="Correo electrónico">',
+        '    <input type="password" placeholder="Contraseña">',
+        '    <a class="boton" href="error.html">Acceder</a>',
+        '  </div>',
+        '  <span class="code-comment">&lt;!-- encrypted message --&gt;</span>',
+        '  <span class="code-comment">&lt;!-- UEhJU0hJTkc= --&gt;</span>',
+        '</body>',
+        '</html>',
+        '',
+        'login.js',
+        '--------',
+        'const encoded = "UEhJU0hJTkc=";',
+        'const decoded = atob(encoded);',
+        'console.log("Loading authentication process...");',
+        'console.log("Decoded message:");',
+        'console.log(decoded);',
+        '',
+        'error.html',
+        '----------',
+        '<h2>Error de autenticación</h2>',
+        '<p>No se ha podido verificar la cuenta.</p>'
+      ].join('\\n'),
+      console: [
+        'Loading authentication process...',
+        'login.js:7 Decoded message:',
+        'login.js:9 PHISHING'
+      ].join('\\n'),
+      network: [
+        'Name                    Status   Type        Size     Initiator',
+        'index.html              200      document    3.4 KB   Other',
+        'styles.css              200      stylesheet  8.1 KB   index.html',
+        'logo.png                200      png         14 KB    index.html',
+        'login3ESO.html          200      document    2.8 KB   index.html',
+        'login.js                200      script      1.1 KB   login3ESO.html',
+        'security-banner.png     200      png         22 KB    login3ESO.html',
+        'tracking-blocked.js     blocked  script      0 B      navegador',
+        'error.html              200      document    1.6 KB   login3ESO.html',
+        'favicon.ico             404      icon        0 B      Other',
+        '',
+        'Headers',
+        'Request URL: http://microsof-security-login.ru/login3ESO.html',
+        'Request Method: GET',
+        'Remote Address: 203.0.113.24:80'
+      ].join('\\n'),
+      performance: [
+        'Performance profile',
+        '===================',
+        'Recording: stopped',
+        'Navigation: index.html',
+        '',
+        'Timings',
+        'Scripting: 12 ms',
+        'Rendering: 8 ms',
+        'Painting: 3 ms',
+        'Loading: 41 ms',
+        '',
+        'Main thread',
+        '[0 ms - 12 ms] Parse HTML',
+        '[12 ms - 24 ms] Load login.js',
+        '[24 ms - 31 ms] Recalculate style',
+        '[31 ms - 44 ms] Paint',
+        '',
+        'Long tasks: none',
+        'Tip: rendimiento no contiene la flag en este reto.'
+      ].join('\\n'),
+      memory: [
+        'Memory',
+        '======',
+        'Heap snapshot: no disponible',
+        '',
+        'Summary',
+        'Documents: 1',
+        'Frames: 1',
+        'DOM nodes: 37',
+        'JS event listeners: 2',
+        'Detached nodes: 0',
+        '',
+        'Allocation timeline',
+        'login3ESO.html: 18 KB',
+        'login.js: 4 KB',
+        'styles.css: 21 KB',
+        '',
+        'Tip: memoria no contiene la flag en este reto.'
+      ].join('\\n'),
+      application: [
+        '<div style="font-weight:700;margin-bottom:10px">Application</div>',
+        '<div style="display:grid;grid-template-columns:180px 1fr;gap:16px">',
+        '<div style="border-right:1px solid #ddd;padding-right:12px">',
+        '<div>Manifest</div><div>Service workers</div><div>Storage</div><div style="margin-left:14px">Local storage</div><div style="margin-left:14px">Session storage</div><div style="margin-left:14px">Cookies</div>',
+        '</div>',
+        '<table class="storage-table"><tr><th>Clave</th><th>Valor</th></tr>',
+        '<tr><td>last_page</td><td>login3ESO.html</td></tr>',
+        '<tr><td>theme</td><td>default</td></tr>',
+        '<tr><td>session_status</td><td>not_verified</td></tr>',
+        '<tr><td>cache</td><td>empty</td></tr>',
+        '</table>',
+        '</div>'
+      ].join('')
+    }, 'console')}
+    </div>
+  </div>
+  <div class="answer-section" id="answer-section-inline-3-1">
+    <div class="confidence-row">
+      <span class="confidence-label"><strong>Antes de responder:</strong> ¿qué seguridad tienes de que tu respuesta es correcta? (1 = nada seguro, 5 = muy seguro)</span>
+      <div class="confidence-btns">
+        ${[1,2,3,4,5].map(n => `<button class="conf-btn" id="conf-inline-3_1-${n}" onclick="setConfidenceInline3ESO(${n})">${n}</button>`).join('')}
+      </div>
+    </div>
+    <div class="answer-input-row">
+      <input type="text" class="answer-input" id="flag-input-inline-3-1" placeholder="Introduce la flag aquí..."
+             onkeydown="if(event.key==='Enter') submitInline3ESOFlag()">
+      <button class="submit-btn" onclick="submitInline3ESOFlag()">Enviar →</button>
+    </div>
+  </div>`;
+}
+
+function buildDevtoolsPhishingFixedHTML() {
+  return `
+  <div class="sim-window">
+    <div class="sim-window-bar">
+      <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+      <div class="sim-url" id="sim3-url">file:///RETO1/index.html</div>
+      <button type="button" class="btn-sm-panel" onclick="openSim3Index()">Inicio</button>
+    </div>
+    <div class="sim-page" id="sim3-page">
+      <div style="background:white;max-width:800px;margin:auto;padding:30px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,.18)">
+        <h1 style="margin-top:0">⚠️ Actividad sospechosa detectada</h1>
+        <p><strong>De:</strong> soporte@microsof-security.com</p>
+        <p>Hemos detectado actividad sospechosa en su cuenta Microsoft. Debe verificar sus datos inmediatamente o su cuenta será bloqueada.</p>
+        <button type="button" class="ext-link-btn" onclick="openSim3Login()">Verificar cuenta</button>
+        <p style="color:gray;font-size:12px;margin-top:30px">Mensaje automático del servicio de seguridad Microsoft.</p>
+      </div>
+    </div>
+    <button type="button" class="ext-link-btn" id="sim3-f12-btn" style="display:none;margin:12px" onclick="document.getElementById('devtools-3-1-static').style.display='block'">Abrir F12</button>
+    <div class="devtools" id="devtools-3-1-static" style="display:none">
+      <div class="devtools-tabs">
+        <button type="button" class="devtools-tab active" data-tab-target="elements" onclick="showSimTab('devtools-3-1-static','elements')">Elements</button>
+        <button type="button" class="devtools-tab" data-tab-target="console" onclick="showSimTab('devtools-3-1-static','console')">Console</button>
+        <button type="button" class="devtools-tab" data-tab-target="sources" onclick="showSimTab('devtools-3-1-static','sources')">Sources</button>
+        <button type="button" class="devtools-tab" data-tab-target="network" onclick="showSimTab('devtools-3-1-static','network')">Network</button>
+        <button type="button" class="devtools-tab" data-tab-target="performance" onclick="showSimTab('devtools-3-1-static','performance')">Performance</button>
+        <button type="button" class="devtools-tab" data-tab-target="memory" onclick="showSimTab('devtools-3-1-static','memory')">Memory</button>
+        <button type="button" class="devtools-tab" data-tab-target="application" onclick="showSimTab('devtools-3-1-static','application')">Application</button>
+      </div>
+      <div class="devtools-panel active" data-tab="elements">
+        <div class="code-line">&lt;!doctype html&gt;</div>
+        <div class="code-line">&lt;html&gt;</div>
+        <div class="code-line">  &lt;head&gt;&lt;title&gt;Actividad sospechosa detectada&lt;/title&gt;&lt;/head&gt;</div>
+        <div class="code-line">  &lt;body&gt;</div>
+        <div class="code-line">    &lt;a class="boton" href="login3ESO.html"&gt;Verificar cuenta&lt;/a&gt;</div>
+        <div class="code-line">    <span class="code-comment">&lt;!-- encrypted message --&gt;</span></div>
+        <div class="code-line">    <span class="code-comment">&lt;!-- UEhJU0hJTkc= --&gt;</span></div>
+        <div class="code-line">    &lt;script src="login.js"&gt;&lt;/script&gt;</div>
+        <div class="code-line">  &lt;/body&gt;</div>
+        <div class="code-line">&lt;/html&gt;</div>
+      </div>
+      <div class="devtools-panel" data-tab="console">
+        <div class="console-line">Loading authentication process...</div>
+        <div class="console-line">login.js:7 Decoded message:</div>
+        <div class="console-line">login.js:9 PHISHING</div>
+      </div>
+      <div class="devtools-panel" data-tab="sources">
+        <div class="code-line">index.html</div>
+        <div class="code-line">login3ESO.html</div>
+        <div class="code-line">login.js</div>
+        <div class="code-line">const encoded = "UEhJU0hJTkc=";</div>
+        <div class="code-line">const decoded = atob(encoded);</div>
+        <div class="code-line">console.log("Decoded message:");</div>
+        <div class="code-line">console.log(decoded);</div>
+      </div>
+      <div class="devtools-panel" data-tab="network">
+        <div class="code-line">Name                    Status   Type        Initiator</div>
+        <div class="code-line">index.html              200      document    Other</div>
+        <div class="code-line">login3ESO.html          200      document    index.html</div>
+        <div class="code-line">login.js                200      script      login3ESO.html</div>
+        <div class="code-line">error.html              200      document    login3ESO.html</div>
+      </div>
+      <div class="devtools-panel" data-tab="performance">
+        <div class="code-line">Recording: stopped</div>
+        <div class="code-line">Scripting: 12 ms</div>
+        <div class="code-line">Rendering: 8 ms</div>
+        <div class="code-line">Long tasks: none</div>
+      </div>
+      <div class="devtools-panel" data-tab="memory">
+        <div class="code-line">Heap snapshot: no disponible</div>
+        <div class="code-line">DOM nodes: 37</div>
+        <div class="code-line">JS event listeners: 2</div>
+        <div class="code-line">Detached nodes: 0</div>
+      </div>
+      <div class="devtools-panel" data-tab="application">
+        <table class="storage-table"><tr><th>Clave</th><th>Valor</th></tr>
+        <tr><td>last_page</td><td>login3ESO.html</td></tr>
+        <tr><td>session_status</td><td>not_verified</td></tr>
+        <tr><td>cache</td><td>empty</td></tr></table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildLocalStorageSimHTML() {
+  return buildLocalStorageFixedHTML();
+  return `
+  <div class="sim-window">
+    <div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><div class="sim-url">file:///panel-interno/index.html</div></div>
+    <div class="sim-page">
+      <div style="width:400px;margin:auto;background:white;padding:20px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.1);text-align:center">
+        <h1>🔐 Panel interno</h1>
+        <p>Acceso restringido. Solo administradores.</p>
+        <p id="sim-local-status" style="font-weight:bold"></p>
+        <button type="button" onclick="checkSimLocalAccess()">Comprobar acceso</button>
+        <div id="sim-local-flag"></div>
+      </div>
+    </div>
+    <button type="button" class="ext-link-btn" style="margin:12px" onclick="document.getElementById('devtools-4-3-wrap').style.display='block'">Abrir F12</button>
+    <div id="devtools-4-3-wrap" style="display:none">
+    ${buildDevtoolsTabs('devtools-4-3', {
+      elements: [
+        '<!doctype html>',
+        '<html>',
+        '<head>',
+        '  <meta charset="UTF-8">',
+        '  <title>Panel interno</title>',
+        '  <script src="panel.js"><\\/script>',
+        '</head>',
+        '<body>',
+        '<div class="container">',
+        '  <h1>🔐 Panel interno</h1>',
+        '  <p>Acceso restringido. Solo administradores.</p>',
+        '  <button onclick="checkAccess()">Comprobar acceso</button>',
+        '  <div id="flag"></div>',
+        '</div>',
+        '</body>',
+        '</html>'
+      ].join('\\n'),
+      console: [
+        'Panel interno cargado',
+        'Valores iniciales: role=guest, auth=false',
+        'Acceso restringido: esperando comprobación'
+      ].join('\\n'),
+      sources: [
+        'index.html',
+        '---------',
+        '<button onclick="checkAccess()">Comprobar acceso</button>',
+        '',
+        'panel.js',
+        '--------',
+        'localStorage.setItem("role", "guest");',
+        'localStorage.setItem("auth", "false");',
+        'function checkAccess() {',
+        '  const role = localStorage.getItem("role");',
+        '  const auth = localStorage.getItem("auth");',
+        '  if (role === "admin" && auth === "true") showFlag();',
+        '}'
+      ].join('\\n'),
+      network: [
+        'Name                 Status   Type       Initiator',
+        'index.html           200      document   Other',
+        'panel.js             200      script     index.html',
+        'styles.css           200      stylesheet index.html',
+        'favicon.ico          404      image      Other'
+      ].join('\\n'),
+      performance: [
+        'Recording: stopped',
+        'Main thread: actividad normal',
+        'Long tasks: none',
+        'Tip: rendimiento no cambia los permisos del usuario.'
+      ].join('\\n'),
+      memory: [
+        'Heap snapshot: no disponible',
+        'DOM nodes: 24',
+        'JS event listeners: 1',
+        'Tip: memoria no contiene el rol de acceso.'
+      ].join('\\n'),
+      application: [
+        '<table class="storage-table"><tr><th>Clave</th><th>Valor</th></tr>',
+        '<tr><td>ctf_metricas_v2:ses_demo</td><td>{"session":"ses_demo","curso":"4eso"}</td></tr>',
+        '<tr><td>role</td><td><input id="sim-role" value="guest" style="width:100%;padding:6px"></td></tr>',
+        '<tr><td>auth</td><td><input id="sim-auth" value="false" style="width:100%;padding:6px"></td></tr>',
+        '<tr><td>theme</td><td>default</td></tr>',
+        '</table>'
+      ].join('')
+    })}
+    </div>
+  </div>`;
+}
+
+function buildDevtoolsTabs(id, panels, activeTab = 'elements') {
+  const tabDefs = [
+    ['elements', 'Elements'],
+    ['console', 'Console'],
+    ['sources', 'Sources'],
+    ['network', 'Network'],
+    ['performance', 'Performance'],
+    ['memory', 'Memory'],
+    ['application', 'Application']
+  ].filter(([key]) => Object.prototype.hasOwnProperty.call(panels, key));
+  return `
+  <div class="devtools" id="${id}">
+    <div class="devtools-tabs">
+      ${tabDefs.map(([key, label], index) => `
+      <button type="button" class="devtools-tab${key === activeTab ? ' active' : ''}" data-tab-target="${key}" onclick="showSimTab('${id}', '${key}')">${label}</button>`).join('')}
+    </div>
+    ${tabDefs.map(([key], index) => {
+      const panel = panels[key] || '';
+      const html = key === 'application' && panel.includes('<table') ? panel : formatDevtoolsPanel(panel, key === 'console' ? 'console' : '');
+      return `<div class="devtools-panel${key === activeTab ? ' active' : ''}" data-tab="${key}">${html}</div>`;
+    }).join('')}
+  </div>`;
+}
+
+function buildLocalStorageFixedHTML() {
+  return `
+  <div class="sim-window">
+    <div class="sim-window-bar">
+      <span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span>
+      <div class="sim-url">file:///panel-interno/index.html</div>
+    </div>
+    <div class="sim-page">
+      <div style="width:100%;max-width:460px;margin:auto;background:white;padding:24px;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.1);text-align:center">
+        <h1>🔐 Panel interno</h1>
+        <p>Acceso restringido. Solo administradores.</p>
+        <p id="sim-local-status" style="font-weight:bold"></p>
+        <button type="button" onclick="checkSimLocalAccess()" style="background:#0ea5e9;color:white;border:0;border-radius:6px;padding:12px 18px;font-weight:700">Comprobar acceso</button>
+        <div id="sim-local-flag"></div>
+      </div>
+    </div>
+	<button type="button" class="ext-link-btn" style="margin:12px"
+  onclick="document.getElementById('devtools-4-3-fixed').style.display='block'">
+  Abrir F12
+</button>
+
+<div class="devtools" id="devtools-4-3-fixed" style="display:none">
+      <div class="devtools-tabs">
+        <button type="button" class="devtools-tab active" data-tab-target="elements" onclick="showSimTab('devtools-4-3-fixed','elements')">Elements</button>
+        <button type="button" class="devtools-tab" data-tab-target="console" onclick="showSimTab('devtools-4-3-fixed','console')">Console</button>
+        <button type="button" class="devtools-tab" data-tab-target="sources" onclick="showSimTab('devtools-4-3-fixed','sources')">Sources</button>
+        <button type="button" class="devtools-tab" data-tab-target="network" onclick="showSimTab('devtools-4-3-fixed','network')">Network</button>
+        <button type="button" class="devtools-tab" data-tab-target="performance" onclick="showSimTab('devtools-4-3-fixed','performance')">Performance</button>
+        <button type="button" class="devtools-tab" data-tab-target="memory" onclick="showSimTab('devtools-4-3-fixed','memory')">Memory</button>
+        <button type="button" class="devtools-tab" data-tab-target="application" onclick="showSimTab('devtools-4-3-fixed','application')">Application</button>
+      </div>
+      <div class="devtools-panel active" data-tab="elements">
+        <div class="code-line">&lt;!doctype html&gt;</div>
+        <div class="code-line">&lt;html&gt;</div>
+        <div class="code-line">  &lt;head&gt;</div>
+        <div class="code-line">    &lt;meta charset="UTF-8"&gt;</div>
+        <div class="code-line">    &lt;title&gt;Panel interno&lt;/title&gt;</div>
+        <div class="code-line">    &lt;script src="panel.js"&gt;&lt;/script&gt;</div>
+        <div class="code-line">  &lt;/head&gt;</div>
+        <div class="code-line">  &lt;body&gt;</div>
+        <div class="code-line">    &lt;div class="container"&gt;</div>
+        <div class="code-line">      &lt;h1&gt;Panel interno&lt;/h1&gt;</div>
+        <div class="code-line">      &lt;p&gt;Acceso restringido. Solo administradores.&lt;/p&gt;</div>
+        <div class="code-line">      &lt;button onclick="checkAccess()"&gt;Comprobar acceso&lt;/button&gt;</div>
+        <div class="code-line">      &lt;div id="flag"&gt;&lt;/div&gt;</div>
+        <div class="code-line">    &lt;/div&gt;</div>
+        <div class="code-line">  &lt;/body&gt;</div>
+        <div class="code-line">&lt;/html&gt;</div>
+      </div>
+      <div class="devtools-panel" data-tab="console">
+        <div class="console-line">Panel interno cargado</div>
+        <div class="console-line">Valores iniciales: role=guest, auth=false</div>
+        <div class="console-line">Acceso restringido: esperando comprobación</div>
+      </div>
+      <div class="devtools-panel" data-tab="sources">
+        <div class="code-line">index.html</div>
+        <div class="code-line">panel.js</div>
+        <div class="code-line">localStorage.setItem("role", "guest");</div>
+        <div class="code-line">localStorage.setItem("auth", "false");</div>
+        <div class="code-line">if (role === "admin" && auth === "true") showFlag();</div>
+      </div>
+      <div class="devtools-panel" data-tab="network">
+        <div class="code-line">Name                 Status   Type       Initiator</div>
+        <div class="code-line">index.html           200      document   Other</div>
+        <div class="code-line">panel.js             200      script     index.html</div>
+        <div class="code-line">styles.css           200      stylesheet index.html</div>
+        <div class="code-line">favicon.ico          404      image      Other</div>
+      </div>
+      <div class="devtools-panel" data-tab="performance">
+        <div class="code-line">Recording: stopped</div>
+        <div class="code-line">Main thread: actividad normal</div>
+        <div class="code-line">Long tasks: none</div>
+        <div class="code-line">Tip: rendimiento no cambia los permisos del usuario.</div>
+      </div>
+      <div class="devtools-panel" data-tab="memory">
+        <div class="code-line">Heap snapshot: no disponible</div>
+        <div class="code-line">DOM nodes: 24</div>
+        <div class="code-line">JS event listeners: 1</div>
+        <div class="code-line">Tip: memoria no contiene el rol de acceso.</div>
+      </div>
+      <div class="devtools-panel" data-tab="application">
+        <table class="storage-table"><tr><th>Clave</th><th>Valor</th></tr>
+        <tr><td>ctf_metricas_v2:ses_demo</td><td>{"session":"ses_demo","curso":"4eso"}</td></tr>
+        <tr><td>role</td><td><input id="sim-role" value="guest" style="width:100%;padding:6px"></td></tr>
+        <tr><td>auth</td><td><input id="sim-auth" value="false" style="width:100%;padding:6px"></td></tr>
+        <tr><td>theme</td><td>default</td></tr></table>
+      </div>
+    </div>
+  </div>`;
+}
+
+function formatDevtoolsPanel(text, type) {
+  return String(text || '').split('\n').map(line => {
+    const cls = type === 'console' ? 'console-line' : line.includes('code-comment') ? 'code-line' : 'code-line';
+    return `<div class="${cls}">${line.includes('<span') ? line : escHtml(line)}</div>`;
+  }).join('');
+}
+
+function buildImagenRecursoHTML(reto) {
+  return `
+  <div class="content-area">
+    <div class="content-label">${escHtml(reto.recurso_titulo || 'Imagen del reto')}</div>
+    <div class="content-body">
+      <img src="${reto.imagen_src}" alt="${escHtml(reto.recurso_titulo || reto.titulo)}" class="resource-image">
+    </div>
+  </div>`;
+}
+
+function buildPaqueteRecursoHTML(reto) {
+  if (reto.id === '3_2') return buildBase64DecoderSimHTML(reto);
+  if (reto.id === '3_5') return buildEsteganografiaHTML(reto);
+  if (reto.id === '4_4') return buildHiddenRouteSimHTML(reto);
+  const frameId = `embedded-${reto.id}-links`;
+  const first = (reto.enlaces || [])[0];
+  const ocultarBotonAbrir = ['2_3', '2_4'].includes(reto.id);
+  const links = ocultarBotonAbrir ? '' : (reto.enlaces || []).map((link, i) => `
+    <button type="button" class="ext-link-btn" onclick="setEmbeddedFrame('${frameId}', ${jsArg(link.url)}, ${jsArg(link.titulo)})">
+      ${i + 1}. ${escHtml(link.titulo)}
+    </button>`).join('');
+  const previews = (reto.previsualizaciones || []).map(item => {
+    const wideClass = item.grande ? ' resource-card-wide' : '';
+    if (item.tipo === 'imagen') {
+      return `
+      <div class="resource-card${wideClass}">
+        <img src="${item.url}" alt="${escHtml(item.nombre)}" class="preview-thumb${item.grande ? ' document-preview' : ''}">
+        <div class="resource-card-title" style="margin-top:8px">${escHtml(item.nombre)}</div>
+        <div class="resource-card-meta">${escHtml(item.descripcion || 'Imagen incluida en el reto')}</div>
+      </div>`;
+    }
+    if (item.tipo === 'texto') {
+      return `
+      <div class="resource-card${wideClass}">
+        <div class="resource-card-title">${escHtml(item.nombre)}</div>
+        <div class="text-preview">${escHtml(item.contenido || '').replace(/\\n/g, '\n')}</div>
+      </div>`;
+    }
+    return `
+    <div class="resource-card${wideClass}">
+      <div class="resource-card-title">${escHtml(item.nombre)}</div>
+      <div class="resource-card-meta">${escHtml(item.tipo || 'archivo')} incluido en el reto</div>
+    </div>`;
+  }).join('');
+
+  const allowDownload = reto.recurso_descargable && reto.permitir_descarga !== false;
+  return `
+  <div class="ext-link-box">
+    <div class="ext-link-desc">${escHtml(reto.recurso_desc || 'Revisa los recursos del reto.')}</div>
+    ${links ? `<div class="external-links-grid" style="margin-top:10px">${links}</div>` : ''}
+    ${allowDownload ? `<a href="${reto.recurso_descargable}" download class="ext-link-btn">⬇️ Descargar paquete ZIP</a>` : ''}
+    ${first ? buildEmbeddedBrowser(frameId, first.url, first.titulo) : ''}
+  </div>
+  ${previews ? `
+  <div class="content-area" style="margin-top:12px">
+    <div class="content-label">Contenido del paquete</div>
+    <div class="content-body">
+      <div class="preview-gallery">${previews}</div>
+    </div>
+  </div>` : ''}`;
+}
+
+function buildEsteganografiaHTML(reto) {
+  return `
+  <div class="content-area">
+    <div class="content-label">Imagen analizada</div>
+    <div class="content-body">
+      <img src="${reto.recurso_descargable}" alt="Imagen del concurso" class="resource-image">
+    </div>
+  </div>
+  <div class="sim-window">
+    <div class="sim-window-bar"><span class="sim-dot"></span><span class="sim-dot"></span><span class="sim-dot"></span><div class="sim-url">Propiedades de concurso.jpg</div></div>
+    <div class="props-tabs">
+      <button type="button" class="props-tab active" onclick="showPropsTab('general')">General</button>
+      <button type="button" class="props-tab" onclick="showPropsTab('seguridad')">Seguridad</button>
+      <button type="button" class="props-tab" onclick="showPropsTab('detalles')">Detalles</button>
+      <button type="button" class="props-tab" onclick="showPropsTab('firmas')">Firmas digitales</button>
+    </div>
+    <div class="props-panel active" data-props-tab="general">
+      <table class="props-table"><tr><td>Nombre</td><td>concurso.jpg</td></tr><tr><td>Tipo de archivo</td><td>Imagen JPEG</td></tr><tr><td>Ubicación</td><td>Equipo\\Imágenes\\Concurso</td></tr><tr><td>Tamaño</td><td>184 KB</td></tr><tr><td>Creado</td><td>13/06/2026 17:56</td></tr></table>
+    </div>
+    <div class="props-panel" data-props-tab="seguridad">
+      <table class="props-table"><tr><td>Nombre de grupo o usuario</td><td>Alex Martínez</td></tr><tr><td>Permisos</td><td>Lectura y ejecución</td></tr><tr><td>Control total</td><td>No permitido</td></tr></table>
+    </div>
+    <div class="props-panel" data-props-tab="detalles">
+      <table class="props-table">
+        <tr><th>Propiedad</th><th>Valor</th></tr>
+        <tr><td>Título</td><td>Foto concurso primavera 2026</td></tr>
+        <tr><td>Asunto</td><td>Entrega final concurso fotografía</td></tr>
+        <tr><td>Etiquetas</td><td>concurso; instituto; fotografía</td></tr>
+        <tr><td>Autores</td><td>Alex Martínez</td></tr>
+        <tr><td>Fecha de captura</td><td>12/06/2026 17:56</td></tr>
+        <tr><td>Dimensiones</td><td>1003 x 615</td></tr>
+        <tr><td>Ancho</td><td>1003 píxeles</td></tr>
+        <tr><td>Alto</td><td>615 píxeles</td></tr>
+        <tr><td>Creador de objetivo</td><td>alex_gamer12</td></tr>
+        <tr><td>Número de serie de la cámara</td><td>FORENSE2026!</td></tr>
+        <tr><td>Modelo de flash</td><td>Speedlite 430EX III-RT</td></tr>
+        <tr><td>Fuente de luz</td><td>Luz del día</td></tr>
+      </table>
+    </div>
+    <div class="props-panel" data-props-tab="firmas">
+      <table class="props-table"><tr><td>Firmas digitales</td><td>No hay firmas asociadas a este archivo.</td></tr></table>
+    </div>
+  </div>`;
+}
+
+function buildImagenEmbebidaHTML(reto) {
+  // For 1eso reto 1: show profile cards visually since image download would be too heavy
+  return `
+  <div class="content-area">
+    <div class="content-label">📱 Perfiles recibidos — ¿Cuál es el impostor?</div>
+    <div class="content-body">
+      <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">
+        ${buildFakeProfileCards()}
+      </div>
+    </div>
+  </div>`;
+}
+
+function buildFakeProfileCards() {
+  const profiles = [
+    { name: 'María García', user: '@maria.garcia', friends: 312, posts: 87, since: '2022', bio: 'Estudiante 🎓 Deportes y música', real: true, emoji: '👩' },
+    { name: 'Carlos Ruiz', user: '@carlos.ruiz', friends: 198, posts: 54, since: '2021', bio: 'Gaming 🎮 Películas y series', real: true, emoji: '👦' },
+    { name: 'CREEPER', user: '@user_bot_29471x', friends: 3, posts: 1, since: '2026', bio: '', real: false, emoji: '🤖', flag: 'CREEPER' },
+    { name: 'Sofía López', user: '@sofia.lopez', friends: 247, posts: 120, since: '2023', bio: 'Arte y fotografía 📸', real: true, emoji: '👧' }
+  ];
+  return profiles.map(p => `
+  <div style="background:var(--surface2);border:1px solid ${p.real ? 'var(--border)' : 'var(--danger)'};border-radius:var(--radius);padding:14px;">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+      <div style="width:44px;height:44px;border-radius:50%;background:${p.real ? 'var(--border)' : '#3f1010'};display:flex;align-items:center;justify-content:center;font-size:22px;">${p.emoji}</div>
+      <div>
+        <div style="font-weight:700;font-size:14px;">${p.name}</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:var(--font-display)">${p.user}</div>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--text-dim);line-height:1.6;">
+      ${p.bio ? `<div>📝 ${p.bio}</div>` : '<div style="color:var(--danger)">📝 Sin biografía</div>'}
+      <div>👥 ${p.friends} amigos · 📸 ${p.posts} publicaciones</div>
+      <div>📅 Miembro desde ${p.since}</div>
+      ${p.flag ? `<div style="margin-top:8px;padding:6px 10px;background:rgba(239,68,68,0.1);border:1px solid var(--danger);border-radius:4px;color:var(--danger);font-family:var(--font-display);font-size:13px;">Flag: ${p.flag}</div>` : ''}
+    </div>
+  </div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════
+//  HINTS HTML
+// ═══════════════════════════════════════════════════
+function buildHintsHTML(reto, isDone) {
+  const used = STATE.hintsUsed[reto.id] || [];
+  const shownHints = isDone
+    ? reto.pistas
+    : reto.pistas.filter((_, i) => used.includes(i));
+
+  let hintsBlock = '';
+  if (shownHints.length > 0) {
+    hintsBlock = `<div class="hints-section">` +
+      shownHints.map((h, i) => `
+      <div class="hint-item">
+        <div class="hint-header">
+          <div class="hint-num">💡 Pista ${h.nivel}</div>
+          <button class="hint-speak" onclick="speakHint(${h.nivel - 1})">🔊 Escuchar pista</button>
+        </div>
+        ${escHtml(h.texto).replace(/\n/g, '<br>')}
+      </div>`).join('') + `</div>`;
+  }
+
+  const nextHintIdx = used.length;
+  const hasMoreHints = nextHintIdx < reto.pistas.length && !isDone;
+
+  const hintBtn = hasMoreHints
+    ? `<button class="btn btn-hint" onclick="useHint(${nextHintIdx})">💡 Pedir pista ${nextHintIdx + 1}</button>`
+    : '';
+
+  return `
+  <div id="hints-container">
+    ${hintsBlock}
+    <div class="action-row" id="hint-action-row">
+      ${hintBtn}
+    </div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  ANSWER HTML
+// ═══════════════════════════════════════════════════
+function buildAnswerHTML(reto, isDone) {
+  if (isDone) {
+    return `
+    <div class="answer-section">
+      <div class="feedback success show">✓ Reto completado — Flag: <strong>${reto.flag}</strong></div>
+      ${STATE.currentIdx < STATE.course.retos.length - 1
+        ? `<button class="btn btn-primary" onclick="nextChallenge()">Siguiente reto →</button>`
+        : `<button class="btn btn-primary" onclick="showResults(false)">Ver resultados finales →</button>`}
+    </div>`;
+  }
+
+  return `
+  <div class="answer-section" id="answer-section">
+    <div class="confidence-row">
+      <span class="confidence-label"><strong>Antes de responder:</strong> ¿qué seguridad tienes de que tu respuesta es correcta? (1 = nada seguro, 5 = muy seguro)</span>
+      <div class="confidence-btns">
+        ${[1,2,3,4,5].map(n =>
+          `<button class="conf-btn" id="conf-${reto.id}-${n}" onclick="setConfidence(${n}, '${reto.id}')">${n}</button>`
+        ).join('')}
+      </div>
+    </div>
+    <div class="answer-input-row">
+      <input type="text" class="answer-input" id="flag-input" placeholder="Introduce la flag aquí..."
+             onkeydown="if(event.key==='Enter') submitFlag()">
+      <button class="submit-btn" onclick="submitFlag()">Enviar →</button>
+    </div>
+    <div class="feedback" id="feedback-box"></div>
+  </div>`;
+}
+
+// ═══════════════════════════════════════════════════
+//  INTERACTIVITY SETUP
+// ═══════════════════════════════════════════════════
+function setupInteractivity(reto, isDone) {
+  if (isDone) return;
+
+  // Panel interactivo: track selected
+  if (reto.tipo === 'panel_interactivo') {
+    window._panelSelected = new Set();
+  }
+  if (reto.tipo === 'auditoria_noticia') {
+    window._selectedArgs = new Set();
+  }
+
+  // Restore confidence
+  const conf = STATE.confidence[reto.id];
+  if (conf) {
+    document.getElementById(`conf-${reto.id}-${conf}`)?.classList.add('selected');
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  INTERACTIVE ACTIONS
+// ═══════════════════════════════════════════════════
+function showLogTab(idx) {
+  document.querySelectorAll('.log-viewer').forEach((el, i) => {
+    el.style.display = i === idx ? 'block' : 'none';
+  });
+  document.querySelectorAll('.log-tab').forEach((el, i) => {
+    el.className = 'log-tab' + (i === idx ? ' active' : '');
+  });
+}
+
+function revealURL(el, op) {
+  if (op.legitima) {
+    el.classList.add('revealed');
+    // Auto-fill the flag
+    const input = document.getElementById('flag-input');
+    if (input) { input.value = op.flag_visible; input.focus(); }
+  } else {
+    el.style.borderColor = 'var(--danger)';
+    setTimeout(() => { el.style.borderColor = ''; }, 1000);
+  }
+}
+
+function selectImagen(id, img) {
+  if (img.es_correcta) {
+    document.getElementById('img-' + id).classList.add('maliciosa-selected');
+    const input = document.getElementById('flag-input');
+    if (input) { input.value = img.flag_visible; input.focus(); }
+  } else {
+    const el = document.getElementById('img-' + id);
+    el.style.borderColor = 'var(--danger)';
+    setTimeout(() => { el.style.borderColor = ''; }, 800);
+    showFeedback('Esa imagen expone menos datos. Busca la que combina cara, nombre y centro.', false);
+  }
+}
+
+function selectApp(el, app) {
+  if (app.maliciosa) {
+    el.classList.add('maliciosa-selected');
+    const input = document.getElementById('flag-input');
+    if (input) { input.value = app.flag_visible; input.focus(); }
+  } else {
+    el.style.borderColor = 'var(--danger)';
+    setTimeout(() => { el.style.borderColor = ''; }, 800);
+    showFeedback('Esa app pide permisos coherentes con su función. Busca la que pide accesos innecesarios.', false);
+  }
+}
+
+function toggleCorreo(el) {
+  el.classList.toggle('expanded');
+}
+
+function toggleArgumento(el, idx) {
+  if (!window._selectedArgs) window._selectedArgs = new Set();
+  el.classList.toggle('selected');
+  const check = el.querySelector('.argumento-check');
+  if (el.classList.contains('selected')) {
+    window._selectedArgs.add(idx);
+    check.textContent = '✓';
+  } else {
+    window._selectedArgs.delete(idx);
+    check.textContent = '';
+  }
+  // Build flag from selected
+  const reto = STATE.course.retos[STATE.currentIdx];
+  const selectedLetters = [...window._selectedArgs]
+    .sort((a, b) => a - b)
+    .map(i => reto.argumentos[i])
+    .filter(a => a.letra)
+    .map(a => a.letra)
+    .join('');
+  const input = document.getElementById('flag-input');
+  if (input && selectedLetters) input.value = selectedLetters;
+}
+
+function togglePanelBtn(id) {
+  if (!window._panelSelected) window._panelSelected = new Set();
+  const btn = document.getElementById('pbtn-' + id);
+  btn.classList.toggle('active');
+  if (btn.classList.contains('active')) {
+    window._panelSelected.add(id);
+  } else {
+    window._panelSelected.delete(id);
+  }
+  const reto = STATE.course.retos[STATE.currentIdx];
+  const correctIds = new Set(reto.botones.filter(b => b.correcto).map(b => b.id));
+  const selected = window._panelSelected;
+  const isCorrect = selected.size === correctIds.size &&
+    [...selected].every(id => correctIds.has(id));
+  if (isCorrect) {
+    const input = document.getElementById('flag-input');
+    if (input) input.value = reto.flag;
+  }
+}
+
+function setConfidence(n, retoId) {
+  STATE.confidence[retoId] = n;
+  document.querySelectorAll(`[id^="conf-${retoId}-"]`).forEach(b => b.classList.remove('selected'));
+  document.getElementById(`conf-${retoId}-${n}`)?.classList.add('selected');
+  logEvent('confidence_set', { reto: retoId, value: n });
+}
+
+function setConfidenceInline3ESO(n) {
+  setConfidence(n, '3_1');
+  document.querySelectorAll('[id^="conf-inline-3_1-"]').forEach(b => b.classList.remove('selected'));
+  document.getElementById(`conf-inline-3_1-${n}`)?.classList.add('selected');
+}
+
+function submitInline3ESOFlag() {
+  const inlineInput = document.getElementById('flag-input-inline-3-1');
+  const normalInput = document.getElementById('flag-input');
+  if (inlineInput && normalInput) normalInput.value = inlineInput.value;
+  submitFlag();
+}
+
+function useHint(idx) {
+  const reto = STATE.course.retos[STATE.currentIdx];
+  if (!STATE.hintsUsed[reto.id]) STATE.hintsUsed[reto.id] = [];
+  if (!STATE.hintsUsed[reto.id].includes(idx)) {
+    STATE.hintsUsed[reto.id].push(idx);
+    logEvent('hint_used', { reto: reto.id, hint_level: idx + 1 });
+  }
+  // Re-render just the hints section
+  renderChallenge();
+}
+
+// ═══════════════════════════════════════════════════
+//  FLAG SUBMISSION
+// ═══════════════════════════════════════════════════
+function submitFlag() {
+  const reto = STATE.course.retos[STATE.currentIdx];
+  const input = document.getElementById('flag-input');
+  if (!input) return;
+  const answer = input.value.trim();
+  if (!answer) { showFeedback('Introduce una respuesta antes de enviar.', false); return; }
+  if (!STATE.confidence[reto.id]) {
+    showFeedback('Antes de enviar, marca del 1 al 5 qué seguridad tienes de que tu respuesta es correcta.', false);
+    return;
+  }
+
+  if (!STATE.attempts[reto.id]) STATE.attempts[reto.id] = 0;
+  STATE.attempts[reto.id]++;
+
+  const correct = reto.case_insensitive
+    ? answer.toLowerCase() === reto.flag.toLowerCase()
+    : answer === reto.flag;
+
+  logEvent('flag_submit', {
+    reto: reto.id,
+    attempt: STATE.attempts[reto.id],
+    correct,
+    confidence: STATE.confidence[reto.id] || null,
+    hints_used: (STATE.hintsUsed[reto.id] || []).length,
+    answer_len: answer.length
+  });
+
+  if (correct) {
+    input.classList.add('correct');
+    const hintsCount = (STATE.hintsUsed[reto.id] || []).length;
+    const attempts = STATE.attempts[reto.id];
+    const analysisErrors = (STATE.errorTypes[reto.id] || []).filter(err => err.tipo === 'transformacion_incorrecta').length;
+    const stars = attempts === 1 && hintsCount === 0 && analysisErrors === 0 ? 3 :
+                  attempts <= 2 && hintsCount === 0 && analysisErrors <= 1 ? 2 : 1;
+    const retoTime = Math.floor((Date.now() - STATE.retoStartTime) / 1000);
+
+    STATE.completed[reto.id] = {
+      stars,
+      time: retoTime,
+      attempts,
+      usedHint: hintsCount > 0,
+      confidence: STATE.confidence[reto.id] || null
+    };
+
+    logEvent('reto_completed', {
+      reto: reto.id,
+      stars,
+      time: retoTime,
+      attempts,
+      hints_used: hintsCount,
+      confidence: STATE.confidence[reto.id] || null
+    });
+
+    showMedal(reto, stars, attempts, hintsCount, retoTime);
+    renderSidebar();
+    updateProgress();
+
+  } else {
+    input.classList.remove('correct');
+    input.classList.add('wrong');
+    setTimeout(() => input.classList.remove('wrong'), 400);
+
+    const errorInfo = getErrorInfo(reto, answer);
+    if (!STATE.errorTypes[reto.id]) STATE.errorTypes[reto.id] = [];
+    STATE.errorTypes[reto.id].push({
+      tipo: errorInfo.tipo,
+      mensaje: errorInfo.mensaje,
+      intento: STATE.attempts[reto.id],
+      confianza: STATE.confidence[reto.id] || null
+    });
+    logEvent('error_classified', {
+      reto: reto.id,
+      attempt: STATE.attempts[reto.id],
+      tipo_error: errorInfo.tipo,
+      confidence: STATE.confidence[reto.id] || null
+    });
+    showFeedback('❌ ' + errorInfo.mensaje, false);
+
+    // Auto-suggest hint after 2 wrong attempts
+    if (STATE.attempts[reto.id] >= 2 && (!STATE.hintsUsed[reto.id] || STATE.hintsUsed[reto.id].length === 0)) {
+      setTimeout(() => {
+        showFeedback('❌ ' + errorInfo.mensaje + ' — ¿Quieres ver la pista 1?', false);
+      }, 100);
+    }
+  }
+}
+
+function getErrorInfo(reto, answer) {
+  for (const err of (reto.errores_comunes || [])) {
+    try {
+      const re = new RegExp(err.patron, 'i');
+      if (re.test(answer) || (err.patron === '^$' && answer === '')) {
+        return {
+          tipo: err.tipo || 'error_conocido',
+          mensaje: err.mensaje
+        };
+      }
+    } catch(e) {}
+  }
+  return {
+    tipo: 'error_no_clasificado',
+    mensaje: 'Respuesta incorrecta. Revisa bien el enunciado e inténtalo de nuevo.'
+  };
+}
+
+function getErrorMessage(reto, answer) {
+  return getErrorInfo(reto, answer).mensaje;
+}
+
+function showFeedback(msg, success) {
+  const fb = document.getElementById('feedback-box');
+  if (!fb) return;
+  fb.textContent = msg;
+  fb.className = 'feedback show ' + (success ? 'success' : 'error');
+}
+
+// ═══════════════════════════════════════════════════
+//  MEDAL
+// ═══════════════════════════════════════════════════
+function showMedal(reto, stars, attempts, hints, timeSecs) {
+  const icons = ['🥉', '🥈', '🏆'];
+  const titles = ['¡Reto superado!', '¡Muy bien hecho!', '¡Perfecto!'];
+  document.getElementById('medal-icon').textContent = icons[stars - 1];
+  document.getElementById('medal-title').textContent = titles[stars - 1];
+  document.getElementById('medal-sub').textContent = reto.titulo;
+  document.getElementById('medal-stars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  document.getElementById('medal-stats').textContent =
+    `${attempts} intento${attempts > 1 ? 's' : ''} · ${formatTime(timeSecs)}${hints > 0 ? ' · ' + hints + ' pista(s) usada(s)' : ''}`;
+
+  const isLast = STATE.currentIdx >= STATE.course.retos.length - 1;
+  document.getElementById('medal-btn').textContent = isLast ? 'Ver resultados →' : 'Siguiente reto →';
+
+  document.getElementById('medal-overlay').classList.add('show');
+}
+
+function closeMedal() {
+  document.getElementById('medal-overlay').classList.remove('show');
+  const isLast = STATE.currentIdx >= STATE.course.retos.length - 1;
+  if (isLast) {
+    showResults(false);
+  } else {
+    nextChallenge();
+  }
+}
+
+function nextChallenge() {
+  if (STATE.currentIdx < STATE.course.retos.length - 1) {
+    STATE.currentIdx++;
+    STATE.retoStartTime = Date.now();
+    renderSidebar();
+    renderChallenge();
+    document.getElementById('challenge-main').scrollTop = 0;
+    window.scrollTo(0, 0);
+  }
+}
+
+// ═══════════════════════════════════════════════════
+//  RESULTS
+// ═══════════════════════════════════════════════════
+function showResults(timeUp) {
+  if (STATE.timerInterval) clearInterval(STATE.timerInterval);
+  const elapsed = getElapsedSecs();
+  const completed = Object.keys(STATE.completed).length;
+  const total = STATE.course.retos.length;
+  const pct = Math.round((completed / total) * 100);
+  const totalStars = Object.values(STATE.completed).reduce((s, c) => s + c.stars, 0);
+
+  document.getElementById('results-sub').textContent = timeUp
+    ? `¡Se acabó el tiempo! Completaste ${completed} de ${total} retos.`
+    : `Has completado los ${total} retos de ${STATE.course.nombre}.`;
+
+  document.getElementById('r-pct').textContent = pct + '%';
+  document.getElementById('r-time').textContent = formatTime(elapsed);
+  document.getElementById('r-stars').textContent = totalStars + '/' + (total * 3);
+
+  const retosEl = document.getElementById('results-retos');
+  retosEl.innerHTML = STATE.course.retos.map(r => {
+    const done = STATE.completed[r.id];
+    const confidence = done?.confidence || STATE.confidence[r.id] || null;
+    const errors = STATE.errorTypes[r.id] || [];
+    const lastError = errors.length ? errors[errors.length - 1].tipo.replace(/_/g, ' ') : null;
+    return `
+    <div class="result-reto">
+      <div>
+        <div class="result-reto-title">${r.titulo}</div>
+        <div class="result-reto-cat">${r.categoria}${done ? ` · ${done.attempts} intento(s) · ${formatTime(done.time)}${done.usedHint ? ' · usó pista' : ''}` : ' · No completado'}${confidence ? ` · confianza ${confidence}/5` : ''}${lastError ? ` · último error: ${lastError}` : ''}</div>
+      </div>
+      <div class="result-reto-stars" style="color:var(--star)">
+        ${done ? '★'.repeat(done.stars) + '☆'.repeat(3 - done.stars) : '☆☆☆'}
+      </div>
+    </div>`;
+  }).join('');
+
+  logEvent('session_end', {
+    course: STATE.courseId,
+    completed,
+    total,
+    pct,
+    elapsed,
+    totalStars,
+    time_up: timeUp
+  });
+
+  showScreen('results');
+}
+
+// ═══════════════════════════════════════════════════
+//  SPEECH SYNTHESIS
+// ═══════════════════════════════════════════════════
+function speakCurrent() {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const reto = STATE.course.retos[STATE.currentIdx];
+  const text = reto.narrativa + '. ' + reto.enunciado;
+  const utt = new SpeechSynthesisUtterance(textForSpeech(text));
+  utt.lang = 'es-ES';
+  utt.rate = 0.9;
+  speechSynthesis.speak(utt);
+  logEvent('tts_used', { reto: reto.id });
+}
+
+function textForSpeech(text) {
+  return String(text)
+    .replace(/ROBLOX/gi, 'róblox')
+    .replace(/Roblox/g, 'róblox')
+    .replace(/roblox/g, 'róblox')
+    .replace(/\brobots\.txt\b/gi, 'robots punto te equis te')
+    .replace(/\blogs\b/gi, 'registros')
+    .replace(/\bportal\b/gi, 'por tal')
+    .replace(/\bXSS\b/g, 'equis ese ese')
+    .replace(/\bSQL\b/g, 'ese, cú, ele')
+    .replace(/\bHTML\b/g, 'hache te eme ele')
+    .replace(/\bHTTPS\b/g, 'hache te te pe ese')
+    .replace(/\bHTTP\b/g, 'hache te te pe')
+    .replace(/\bDNS\b/g, 'de ene ese')
+    .replace(/\bUSB-C\b/g, 'u ese be ce')
+    .replace(/\bF12\b/g, 'efe doce')
+    .replace(/\bBase64\b/g, 'base sesenta y cuatro')
+    .replace(/\bOneDrive\b/g, 'uan draiv')
+    .replace(/\blocalStorage\b/g, 'local estórach')
+    .replace(/\bBACKSPACE\b/gi, 'tecla borrar')
+    .replace(/\bSHIFT\b/gi, 'tecla mayúsculas')
+    .replace(/simbolos/gi, 'símbolos')
+    .replace(/simbolo/gi, 'símbolo')
+    .replace(/caracteres/gi, 'carácteres')
+    .replace(/faciles/gi, 'fáciles')
+    .replace(/solida/gi, 'sólida')
+    .replace(/alfabetico/gi, 'alfabético')
+    .replace(/\bemoción\b/gi, 'e mo ción')
+    .replace(/cruzala/gi, 'crúzala')
+    .replace(/crúzala/gi, 'crúzala')
+    .replace(/escríbelo/gi, 'escrí belo')
+    .replace(/escribelo/gi, 'escrí belo')
+    .replace(/escribela/gi, 'escríbela')
+    .replace(/analizala/gi, 'analízala')
+    .replace(/analízala/gi, 'analí zala')
+    .replace(/\bañádela\b/gi, 'a ñá de la')
+    .replace(/\bkeylogger\b/gi, 'registrador de teclas')
+    .replace(/\bphishing\b/gi, 'fishing')
+    .replace(/\bspoofing\b/gi, 'suplantación')
+    .replace(/\bspyware\b/gi, 'programa espía');
+}
+
+function speakHint(idx) {
+  if (!window.speechSynthesis) return;
+  const reto = STATE.course.retos[STATE.currentIdx];
+  const hint = reto.pistas && reto.pistas[idx];
+  if (!hint) return;
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(textForSpeech('Pista ' + hint.nivel + '. ' + hint.texto));
+  utt.lang = 'es-ES';
+  utt.rate = 0.9;
+  speechSynthesis.speak(utt);
+  logEvent('hint_tts_used', { reto: reto.id, hint_level: hint.nivel });
+}
+
+// ═══════════════════════════════════════════════════
+//  LOGGING / METRICS
+// ═══════════════════════════════════════════════════
+function logEvent(type, data) {
+  STATE.metrics.push({
+    type,
+    ts: Date.now(),
+    session: STATE.sessionId,
+    course: STATE.courseId,
+    reto_idx: STATE.currentIdx,
+    ...data
+  });
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function escAttr(str) {
+  return escHtml(String(str || '')).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function jsArg(str) {
+  return JSON.stringify(String(str || '')).replace(/"/g, '&quot;');
+}
+
+window.addEventListener('message', function (event) {
+  if (!event || !event.data) return;
+
+  if (event.data.ciberretosScrollTop) {
+    document.querySelectorAll('.embedded-browser-frame').forEach(function (f) {
+      if (f.contentWindow === event.source) {
+        var OFFSET = 230; // ← sube o baja este número para ajustar
+        var top = f.getBoundingClientRect().top + window.scrollY - OFFSET;
+        window.scrollTo({ top: top, behavior: 'smooth' });
+      }
+    });
+  }
+ if (event.data.ciberretosScrollToBottom) {
+    document.querySelectorAll('.embedded-browser-frame').forEach(function (f) {
+      if (f.contentWindow === event.source) {
+        f.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }
+    });
+  }
+  if (typeof event.data.ciberretosHeight === 'number') {
+    document.querySelectorAll('.embedded-browser-frame').forEach(function (f) {
+      if (f.contentWindow === event.source) {
+        f.style.height = Math.max(event.data.ciberretosHeight, 400) + 'px';
+      }
+    });
+  }
+});
+
+
+
+
+function setEmbeddedFrame(frameId, url, title) {
+  const frame = document.getElementById(frameId);
+  const titleEl = document.getElementById(frameId + '-title');
+
+  if (frame) {
+    frame.src = url;
+
+    if (url.includes('roblox-regalos.xyz')) {
+      frame.classList.add('embedded-roblox-regalos');
+    } else {
+      frame.classList.remove('embedded-roblox-regalos');
+    }
+  }
+
+  if (titleEl) {
+    titleEl.textContent = title || 'Recurso del reto';
+  }
+  
+
+  logEvent('embedded_resource_opened', {
+    reto: STATE.course && STATE.course.retos ? STATE.course.retos[STATE.currentIdx].id : null,
+    title: title || '',
+    url: url || ''
+  });
+}
+
+function embeddedHistory(frameId, direction) {
+  const frame = document.getElementById(frameId);
+  if (!frame || !frame.contentWindow) return;
+  try {
+    if (direction === 'back') frame.contentWindow.history.back();
+    if (direction === 'forward') frame.contentWindow.history.forward();
+  } catch (error) {
+    frame.focus();
+  }
+  logEvent('embedded_history_used', {
+    reto: STATE.course && STATE.course.retos ? STATE.course.retos[STATE.currentIdx].id : null,
+    direction
+  });
+}
+
+function openSim3Login() {
+  const url = document.getElementById('sim3-url');
+  const page = document.getElementById('sim3-page');
+  const f12 = document.getElementById('sim3-f12-btn');
+
+  if (url) url.textContent = 'http://microsof-security-login.ru';
+
+  if (page) {
+    page.innerHTML = `
+      <div style="background:white;max-width:700px;margin:auto;padding:40px;border-radius:10px;box-shadow:0 0 12px rgba(0,0,0,.2)">
+        <h2>Iniciar sesión</h2>
+        <p style="background:#eee;padding:10px;border-radius:5px;margin-bottom:20px;font-family:monospace">http://microsof-security-login.ru</p>
+        <input style="display:block;width:300px;padding:12px;margin-bottom:20px" type="text" placeholder="Correo electrónico">
+        <input style="display:block;width:300px;padding:12px;margin-bottom:20px" type="password" placeholder="Contraseña">
+        <button type="button" onclick="openSim3Error()" style="background:#d13438;color:white;padding:12px 20px;border:0;border-radius:6px">Acceder</button>
+      </div>`;
+  }
+
+  if (f12) f12.style.display = 'inline-flex';
+
+  logEvent('simulated_login_opened', { reto: '3_1' });
+}
+
+function openSim3Index() {
+  const url = document.getElementById('sim3-url');
+  const page = document.getElementById('sim3-page');
+  const f12 = document.getElementById('sim3-f12-btn');
+  const devtools = document.getElementById('devtools-3-1-static');
+  if (url) url.textContent = 'file:///RETO1/index.html';
+  if (page) {
+    page.innerHTML = `
+      <div style="background:white;max-width:800px;margin:auto;padding:30px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,.18)">
+        <h1 style="margin-top:0">⚠️ Actividad sospechosa detectada</h1>
+        <p><strong>De:</strong> soporte@microsof-security.com</p>
+        <p>Hemos detectado actividad sospechosa en su cuenta Microsoft. Debe verificar sus datos inmediatamente o su cuenta será bloqueada.</p>
+        <button type="button" class="ext-link-btn" onclick="openSim3Login()">Verificar cuenta</button>
+        <p style="color:gray;font-size:12px;margin-top:30px">Mensaje automático del servicio de seguridad Microsoft.</p>
+      </div>`;
+  }
+  if (f12) f12.style.display = 'none';
+  if (devtools) devtools.style.display = 'none';
+  logEvent('simulated_index_opened', { reto: '3_1' });
+}
+
+function openSim3Error() {
+  const url = document.getElementById('sim3-url');
+  const page = document.getElementById('sim3-page');
+  const f12 = document.getElementById('sim3-f12-btn');
+  const devtools = document.getElementById('devtools-3-1-static');
+
+  if (url) url.textContent = 'http://microsof-security-login.ru/error.html';
+
+  if (f12) f12.style.display = 'none';
+  if (devtools) devtools.style.display = 'none';
+
+  if (page) {
+    page.innerHTML = `
+      <div style="background:white;max-width:650px;margin:auto;padding:40px;border-radius:10px;box-shadow:0 0 12px rgba(0,0,0,.2);text-align:center">
+        <h2 style="color:#b91c1c">Error de autenticación</h2>
+        <p>No se ha podido verificar la cuenta. Inténtelo de nuevo más tarde.</p>
+        <button type="button" onclick="openSim3Login()" style="background:#2563eb;color:white;padding:12px 20px;border:0;border-radius:6px">Volver al login</button>
+      </div>`;
+  }
+
+  logEvent('simulated_error_opened', { reto: '3_1' });
+}
+
+function checkSimLocalAccess() {
+  const role = (document.getElementById('sim-role')?.value || '').trim().toLowerCase();
+  const auth = (document.getElementById('sim-auth')?.value || '').trim().toLowerCase();
+  const status = document.getElementById('sim-local-status');
+  const flag = document.getElementById('sim-local-flag');
+  if (!status || !flag) return;
+  if (role === 'admin' && auth === 'true') {
+    status.textContent = '✅ Acceso concedido como administrador';
+    status.style.color = 'green';
+    flag.innerHTML = '<div class="flag" style="margin-top:30px;background:black;padding:20px;border-radius:8px;color:#00ff88;font-size:24px;font-family:monospace">Flag: LOCAL_STORAGE</div>';
+  } else {
+    status.textContent = '❌ Acceso denegado.';
+    status.style.color = 'red';
+    flag.innerHTML = '';
+  }
+  logEvent('simulated_localstorage_access', { reto: '4_3', role, auth });
+}
+
+function runBase64Decoder(encoded) {
+  const mode = document.getElementById('decoder-mode')?.value || '';
+  const output = document.getElementById('decoder-output');
+  if (!output) return;
+  let result = '';
+  if (mode === 'base64') {
+    try {
+      result = decodeURIComponent(escape(atob(encoded)));
+    } catch (error) {
+      result = 'No se ha podido decodificar el texto como Base64.';
+    }
+  } else if (mode === 'hex') {
+    result = 'No encaja: este texto no tiene formato hexadecimal válido. Elegir opciones al azar cuenta como error de análisis.';
+  } else if (mode === 'rot13') {
+    result = encoded.replace(/[a-zA-Z]/g, c => {
+      const base = c <= 'Z' ? 65 : 97;
+      return String.fromCharCode(((c.charCodeAt(0) - base + 13) % 26) + base);
+    });
+  } else if (mode === 'bin') {
+    result = 'No encaja: el texto no está formado por grupos binarios de 8 bits. Elegir opciones al azar cuenta como error de análisis.';
+  } else {
+    result = 'Selecciona una opción para decodificar.';
+  }
+  if (mode && mode !== 'base64') {
+    const reto = STATE.course && STATE.course.retos ? STATE.course.retos[STATE.currentIdx] : null;
+    if (reto) {
+      if (!STATE.errorTypes[reto.id]) STATE.errorTypes[reto.id] = [];
+      const alreadyLogged = STATE.errorTypes[reto.id].some(err => err.tipo === 'transformacion_incorrecta' && err.modo === mode);
+      if (!alreadyLogged) {
+        STATE.errorTypes[reto.id].push({
+          tipo: 'transformacion_incorrecta',
+          modo: mode,
+          mensaje: 'Ha elegido una transformación que no encaja con la evidencia.',
+          intento: STATE.attempts[reto.id] || 0,
+          confianza: STATE.confidence[reto.id] || null
+        });
+        logEvent('error_classified', {
+          reto: reto.id,
+          attempt: STATE.attempts[reto.id] || 0,
+          tipo_error: 'transformacion_incorrecta',
+          confidence: STATE.confidence[reto.id] || null,
+          mode
+        });
+      }
+    }
+  }
+  output.textContent = result;
+  logEvent('simulated_decoder_used', {
+    reto: STATE.course && STATE.course.retos ? STATE.course.retos[STATE.currentIdx].id : null,
+    mode
+  });
+}
+
+function checkHiddenRoute() {
+  const input = document.getElementById('hidden-route-input');
+  const output = document.getElementById('hidden-route-output');
+  if (!input || !output) return;
+  const route = input.value.trim().replace(/^https?:\/\/[^/]+/i, '');
+  const normalized = route.startsWith('/') ? route : '/' + route;
+  if (normalized.toLowerCase() === '/panel_secreto') {
+    output.textContent = 'Panel oculto encontrado. Flag: RUTA_OCULTA';
+    output.style.background = '#dcfce7';
+    output.style.color = '#14532d';
+  } else {
+    output.textContent = '404 - Ruta no encontrada. Revisa el archivo robots.txt y prueba una ruta interna completa.';
+    output.style.background = '#fee2e2';
+    output.style.color = '#7f1d1d';
+  }
+  logEvent('simulated_route_checked', {
+    reto: STATE.course && STATE.course.retos ? STATE.course.retos[STATE.currentIdx].id : null,
+    route: normalized
+  });
+}
+
+function showSimTab(groupId, tab) {
+  const root = document.getElementById(groupId);
+  if (!root) return;
+  root.querySelectorAll('.devtools-tab').forEach(btn => {
+    btn.classList.toggle('active', (btn.dataset.tabTarget || btn.textContent.trim().toLowerCase()) === tab);
+  });
+  root.querySelectorAll('.devtools-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.dataset.tab === tab);
+  });
+  logEvent('simulated_devtools_tab', { reto: STATE.course?.retos?.[STATE.currentIdx]?.id || null, tab });
+}
+
+function showPropsTab(tab) {
+  document.querySelectorAll('.props-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent.trim().toLowerCase().startsWith(tab));
+  });
+  document.querySelectorAll('.props-panel').forEach(panel => {
+    panel.classList.toggle('active', panel.dataset.propsTab === tab);
+  });
+  logEvent('simulated_properties_tab', { reto: STATE.course?.retos?.[STATE.currentIdx]?.id || null, tab });
+}
+
+// ═══════════════════════════════════════════════════
+//  BOOT
+// ═══════════════════════════════════════════════════
+init();
+</script>
+<script>
+(function(){
+  var STORAGE_KEY='ctf_metricas_v2';
+  var COURSE_LABELS={'1eso':'1º ESO','2eso':'2º ESO','3eso':'3º ESO','4eso':'4º ESO'};
+  var oldSelect=(typeof selectCourse==='function')?selectCourse:null;
+  if(oldSelect) selectCourse=function(courseId){ STATE.sessionId='ses_'+Math.random().toString(36).slice(2)+Date.now().toString(36); return oldSelect.apply(this,arguments); };
+  var oldLog=(typeof logEvent==='function')?logEvent:null;
+  if(oldLog) logEvent=function(type,data){ var r=oldLog.apply(this,arguments); setTimeout(function(){ window.saveMetrics(); },0); return r; };
+  window.showTeacherLogin=function(){ showScreen('tlogin'); setTimeout(function(){ var e=document.getElementById('teacher-pwd'); if(e)e.focus(); },100); };
+  window.checkTeacherPwd=async function(){
+  var i=document.getElementById('teacher-pwd');
+  var e=document.getElementById('pwd-error');
+
+  if(!i||!e)return;
+
+  try{
+    var res=await fetch('/api/teacher-login',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({password:i.value})
+    });
+
+    var data=await res.json();
+
+    if(data.ok){
+      i.value='';
+      e.style.display='none';
+      showScreen('panel');
+      refreshPanel();
+
+      if(!window._panelRefreshTimer){
+        window._panelRefreshTimer=setInterval(refreshPanel,30000);
+      }
+    }else{
+      e.style.display='block';
+      i.value='';
+    }
+  }catch(error){
+    e.style.display='block';
+    i.value='';
+  }
+};
+  async function setMetric(k,v){ localStorage.setItem(k,v); if(window.storage&&window.storage.set){ try{ await window.storage.set(k,v,true); }catch(e){} } }
+  async function getMetric(k){ if(window.storage&&window.storage.get){ try{ var r=await window.storage.get(k,true); if(r&&r.value)return r.value; }catch(e){} } return localStorage.getItem(k); }
+  async function metricKeys(prefix){ var keys=new Set(Object.keys(localStorage).filter(function(k){return k.indexOf(prefix)===0;})); if(window.storage&&window.storage.list){ try{ var r=await window.storage.list(prefix,true); (r&&r.keys||[]).forEach(function(k){keys.add(k);}); }catch(e){} } return Array.from(keys); }
+  async function delMetric(k){ localStorage.removeItem(k); if(window.storage&&window.storage.delete){ try{ await window.storage.delete(k,true); }catch(e){} } }
+  async function apiGetSessions(){
+    var res=await fetch('/api/metrics',{cache:'no-store'});
+    if(!res.ok)throw new Error('API no disponible');
+    var data=await res.json();
+    return data.sessions||[];
+  }
+  async function apiSaveSession(p){
+    var res=await fetch('/api/metrics',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify(p)
+    });
+    if(!res.ok)throw new Error('No se pudo guardar en servidor');
+  }
+  async function apiClearSessions(){
+    var res=await fetch('/api/metrics',{method:'DELETE'});
+    if(!res.ok)throw new Error('No se pudieron borrar los datos del servidor');
+  }
+  function payload(){
+    if(!STATE||!STATE.courseId||!STATE.sessionId||!STATE.course)return null;
+    var retos={};
+    STATE.course.retos.forEach(function(ch){
+      var d=STATE.completed[ch.id];
+      var wrong=(STATE.metrics||[]).filter(function(ev){return ev.reto===ch.id&&ev.type==='flag_submit'&&ev.correct===false;});
+      var classified=STATE.errorTypes[ch.id]||[];
+      var hints=(STATE.hintsUsed[ch.id]||[]).length;
+      retos[ch.id]={
+        orden:ch.orden,
+        titulo:ch.titulo,
+        categoria:ch.categoria,
+        completado:!!d,
+        estrellas:d?d.stars:0,
+        intentos:STATE.attempts[ch.id]||0,
+        pistas:hints,
+        uso_pista:hints>0,
+        tiempo_seg:d?d.time:null,
+        confianza:d&&d.confidence?d.confidence:(STATE.confidence[ch.id]||null),
+        tipos_error:classified.map(function(e){return e.tipo;}),
+        errores_detalle:classified.map(function(e){
+          return {
+            intento:e.intento,
+            tipo:e.tipo,
+            confianza:e.confianza,
+            mensaje:e.mensaje
+          };
+        }),
+        respuestas_erroneas:wrong.map(function(ev,idx){
+          var e=classified[idx];
+          return (e?e.tipo:'error_no_clasificado')+' ('+(ev.answer_len||0)+' caracteres)';
+        })
+      };
+    });
+    return {session:STATE.sessionId,curso:STATE.courseId,inicio:STATE.startTime||Date.now(),ultima_actividad:Date.now(),elapsed_seg:STATE.startTime?Math.floor((Date.now()-STATE.startTime)/1000):0,retos:retos,total_completados:Object.keys(STATE.completed).length,total_retos:STATE.course.retos.length};
+  }
+  window.saveMetrics=async function(){ var p=payload(); if(!p)return; try{ await apiSaveSession(p); }catch(e){ try{ await setMetric(STORAGE_KEY+':'+STATE.sessionId,JSON.stringify(p)); }catch(err){ console.warn('No se pudieron guardar métricas:',err); } } };
+  window.getAllSessions=async function(){ try{ return await apiGetSessions(); }catch(e){ var keys=await metricKeys(STORAGE_KEY+':'), out=[]; for(var k of keys){ try{ var v=await getMetric(k); if(v)out.push(JSON.parse(v)); }catch(err){} } return out.sort(function(a,b){return (b.inicio||0)-(a.inicio||0);}); } };
+  window.refreshPanel=async function(){ var body=document.getElementById('panel-body'); if(!body)return; var sessions=await getAllSessions(); var lu=document.getElementById('last-update'); if(lu)lu.textContent='Última actualización: '+new Date().toLocaleTimeString('es-ES'); renderPanel(sessions,body); };
+  function starText(n){ n=n||0; return '★'.repeat(n)+'☆'.repeat(Math.max(0,3-n)); }
+  function starsFor(x){ return Object.values(x.retos||{}).reduce(function(s,r){return s+(r.estrellas||0);},0); }
+  function courseSummary(sessions){ return Object.keys(COURSE_LABELS).map(function(cid){ var list=sessions.filter(function(s){return s.curso===cid;}); var count=list.length; var avg=count?Math.round(list.reduce(function(a,s){return a+(s.total_retos?(s.total_completados/s.total_retos)*100:0);},0)/count):0; var done=list.reduce(function(a,s){return a+(s.total_completados||0);},0); var stars=list.reduce(function(a,s){return a+starsFor(s);},0); var time=count?Math.round(list.reduce(function(a,s){return a+(s.elapsed_seg||0);},0)/count):0; return '<div class="course-summary-card-panel"><div class="course-summary-title-panel">'+COURSE_LABELS[cid]+'</div><div class="course-summary-metrics-panel"><div><span>'+count+'</span>sesiones</div><div><span>'+avg+'%</span>media</div><div><span>'+done+'</span>retos</div><div><span>'+stars+'★</span>estrellas</div><div><span>'+formatTime(time||0)+'</span>tiempo medio</div></div></div>'; }).join(''); }
+  function detailCards(x){ return Object.values(x.retos||{}).sort(function(a,b){return (a.orden||0)-(b.orden||0);}).map(function(r){ var meta=escHtml(r.categoria)+' · '+(r.intentos||0)+' intento(s)'; if(r.tiempo_seg) meta+=' · '+formatTime(r.tiempo_seg); if(r.uso_pista||r.pistas) meta+=' · usó pista'; if(r.confianza) meta+=' · confianza '+r.confianza+'/5'; if((r.tipos_error||[]).length) meta+=' · errores: '+escHtml((r.tipos_error||[]).join(', ').replace(/_/g,' ')); if(!r.completado) meta+=' · no completado'; return '<div class="student-result-card-panel '+(r.completado?'':'not-done')+'"><div><div class="student-result-title-panel">'+escHtml(r.titulo)+'</div><div class="student-result-meta-panel">'+meta+'</div></div><div class="student-result-stars-panel">'+starText(r.estrellas)+'</div></div>'; }).join(''); }
+  window.renderPanel=function(sessions,body){ if(!sessions.length){ body.innerHTML='<div class="empty-state-panel"><div class="empty-icon-panel">▥</div><p>Aún no hay datos registrados.</p><p style="font-size:12px;color:var(--text-muted);margin-top:8px">Los datos aparecen aquí cuando los alumnos empiezan o completan retos.</p></div>'; return; } var total=sessions.length; var avg=Math.round(sessions.reduce(function(s,x){return s+(x.total_retos?(x.total_completados/x.total_retos)*100:0);},0)/total); var done=sessions.reduce(function(s,x){return s+(x.total_completados||0);},0); var stars=sessions.reduce(function(s,x){return s+starsFor(x);},0); var avgTime=Math.round(sessions.reduce(function(s,x){return s+(x.elapsed_seg||0);},0)/total); var rows=sessions.map(function(x,idx){ var pct=x.total_retos?Math.round((x.total_completados/x.total_retos)*100):0; var cls=pct===100?'badge-ok-panel':pct>=50?'badge-warn-panel':'badge-danger-panel'; var hints=Object.values(x.retos||{}).reduce(function(s,r){return s+(r.pistas||0);},0); var attempts=Object.values(x.retos||{}).reduce(function(s,r){return s+(r.intentos||0);},0); return '<tr class="session-row-panel" onclick="toggleDetail('+idx+')"><td>'+new Date(x.inicio).toLocaleString('es-ES')+'</td><td><span class="badge-panel badge-info-panel">'+(COURSE_LABELS[x.curso]||x.curso)+'</span></td><td><span class="badge-panel '+cls+'">'+pct+'%</span></td><td>'+x.total_completados+'/'+x.total_retos+'</td><td>'+starsFor(x)+'/'+((x.total_retos||0)*3)+'★</td><td>'+formatTime(x.elapsed_seg||0)+'</td><td>'+attempts+'</td><td>'+hints+'</td><td>ver retos</td></tr><tr class="detail-row-panel" id="detail-'+idx+'"><td colspan="9"><div class="student-results-panel">'+detailCards(x)+'</div></td></tr>'; }).join(''); body.innerHTML='<div class="section-title-panel">Resumen global</div><div class="stats-row-panel"><div class="stat-card-panel"><div class="stat-val-panel">'+total+'</div><div class="stat-label-panel">Sesiones</div></div><div class="stat-card-panel"><div class="stat-val-panel">'+avg+'%</div><div class="stat-label-panel">Media completado</div></div><div class="stat-card-panel"><div class="stat-val-panel">'+done+'</div><div class="stat-label-panel">Retos completados</div></div><div class="stat-card-panel"><div class="stat-val-panel">'+stars+'</div><div class="stat-label-panel">Estrellas</div></div><div class="stat-card-panel"><div class="stat-val-panel">'+formatTime(avgTime||0)+'</div><div class="stat-label-panel">Tiempo medio</div></div></div><div class="section-title-panel">Resumen por curso</div><div class="course-summary-grid-panel">'+courseSummary(sessions)+'</div><div class="section-title-panel">Sesiones individuales · clic para ver retos como el alumno</div><div style="overflow-x:auto"><table class="sessions-table-panel"><thead><tr><th>Fecha/Hora</th><th>Curso</th><th>Completado</th><th>Retos</th><th>Estrellas</th><th>Tiempo</th><th>Intentos</th><th>Pistas</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>'; };
+  window.toggleDetail=function(idx){ var r=document.getElementById('detail-'+idx); if(r)r.classList.toggle('open'); };
+  function csvCell(value){ if(value===null||value===undefined)return ''; return '"'+String(value).replace(/\r?\n/g,' ').replace(/"/g,'""')+'"'; }
+  window.exportCSV=async function(){
+    var sessions=await getAllSessions();
+    if(!sessions.length){ alert('No hay datos para exportar.'); return; }
+    var rows=[['Sesion','Curso','Fecha','Tiempo_total_seg','Reto_ID','Titulo','Categoria','Completado','Estrellas','Intentos','Pistas','Tiempo_reto_seg','Confianza_1_5','Num_errores','Tipos_error','Errores_detalle']];
+    sessions.forEach(function(x){
+      var date=new Date(x.inicio).toLocaleString('es-ES');
+      Object.entries(x.retos||{}).forEach(function(pair){
+        var rid=pair[0], r=pair[1];
+        var tipos=(r.tipos_error||[]).join(' | ');
+        var detalle=(r.errores_detalle||[]).map(function(e){
+          return 'intento '+e.intento+': '+e.tipo+(e.confianza?' conf '+e.confianza+'/5':'');
+        }).join(' | ');
+        rows.push([x.session,x.curso,date,x.elapsed_seg||'',rid,r.titulo,r.categoria,r.completado?'SI':'NO',r.estrellas||0,r.intentos||0,r.pistas||0,r.tiempo_seg||'',r.confianza||'',(r.tipos_error||[]).length,tipos,detalle]);
+      });
+    });
+    var csv='sep=;\r\n'+rows.map(function(row){ return row.map(csvCell).join(';'); }).join('\r\n');
+    var blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+    var url=URL.createObjectURL(blob);
+    var a=document.createElement('a');
+    a.href=url;
+    a.download='ciberretos_'+new Date().toISOString().slice(0,10)+'.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  window.clearAllData=async function(){ if(!confirm('¿Borrar TODOS los datos de métricas? Esta acción no se puede deshacer.'))return; try{ await apiClearSessions(); }catch(e){} var keys=await metricKeys(STORAGE_KEY+':'); for(var k of keys) await delMetric(k); refreshPanel(); };
+})();
+</script>
+<div id="image-lightbox" class="image-lightbox" aria-hidden="true">
+  <button
+    type="button"
+    class="image-lightbox-close"
+    id="image-lightbox-close"
+    aria-label="Cerrar imagen"
+  >
+    &times;
+  </button>
+  <img id="image-lightbox-img" src="" alt="Imagen ampliada">
+</div>
+<script>
+(function () {
+  const lightbox = document.getElementById('image-lightbox');
+  const lightboxImg = document.getElementById('image-lightbox-img');
+  const closeButton = document.getElementById('image-lightbox-close');
+
+  function openImage(src, alt) {
+    lightboxImg.src = src;
+    lightboxImg.alt = alt || 'Imagen ampliada';
+    lightbox.classList.add('active');
+    lightbox.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeImage() {
+    lightbox.classList.remove('active');
+    lightbox.setAttribute('aria-hidden', 'true');
+    lightboxImg.src = '';
+  }
+
+  document.addEventListener('click', function (event) {
+    const image = event.target.closest('.resource-image, .preview-thumb');
+
+    if (image) {
+      event.preventDefault();
+      openImage(image.src, image.alt);
+      return;
+    }
+
+    if (
+      event.target === lightbox ||
+      event.target === closeButton ||
+      event.target === lightboxImg
+    ) {
+      closeImage();
+    }
+  });
+
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      closeImage();
+    }
+  });
+})();
+</script>
+</body>
+</html>
+
+

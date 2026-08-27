@@ -1,0 +1,9 @@
+{
+  "name": "ciberretos-centralizado",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Plataforma CiberRetos con métricas centralizadas para aula.",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
