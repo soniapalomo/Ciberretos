@@ -179,7 +179,7 @@ La forma recomendada de reproducir el sistema es mediante Docker.
 
 Desde la carpeta raíz del proyecto:
 
-```bash
+```powershell
 docker build -t ciberretos .
 ```
 
@@ -188,13 +188,13 @@ docker build -t ciberretos .
 En PowerShell de Windows:
 
 ```powershell
-docker run --name ciberretos -p 8080:8080 -e TEACHER_PASSWORD=Panel_docente2026 -v "${PWD}\data:/app/data" ciberretos
+docker run --name ciberretos -p 8080:8080 -e TEACHER_PASSWORD=MiClavePersonal -v "${PWD}\data:/app/data" ciberretos
 ```
 
 En sistemas Linux o macOS:
 
 ```bash
-docker run --name ciberretos -p 8080:8080 -e TEACHER_PASSWORD=Panel_docente2026 -v "$(pwd)/data:/app/data" ciberretos
+docker run --name ciberretos -p 8080:8080 -e TEACHER_PASSWORD=MiClavePersonal -v "$(pwd)/data:/app/data" ciberretos
 ```
 
 La aplicación quedará disponible en:
@@ -202,6 +202,8 @@ La aplicación quedará disponible en:
 ```text
 http://localhost:8080
 ```
+
+La contraseña `MiClavePersonal` es únicamente un ejemplo y puede sustituirse por cualquier contraseña elegida para la instalación.
 
 ### 5.3. Detener la aplicación
 
@@ -239,21 +241,9 @@ El acceso al panel docente está protegido mediante una contraseña que se confi
 TEACHER_PASSWORD
 ```
 
-La contraseña no está almacenada directamente en `index.html`.
+La contraseña no está almacenada directamente en `index.html` ni se incluye como credencial fija en el repositorio.
 
-Para la versión de demostración utilizada en la reproducción del TFM se utiliza:
-
-```text
-Panel_docente2026
-```
-
-Por tanto, el comando de ejecución de demostración es:
-
-```powershell
-docker run --name ciberretos -p 8080:8080 -e TEACHER_PASSWORD=Panel_docente2026 -v "${PWD}\data:/app/data" ciberretos
-```
-
-Cada instalación puede utilizar una contraseña diferente. Por ejemplo:
+Cada instalación debe establecer su propia contraseña al iniciar la aplicación. Por ejemplo:
 
 ```powershell
 docker run --name ciberretos -p 8080:8080 -e TEACHER_PASSWORD=MiClavePersonal -v "${PWD}\data:/app/data" ciberretos
@@ -265,7 +255,9 @@ En ese caso, la contraseña utilizada para acceder al panel docente será:
 MiClavePersonal
 ```
 
-La contraseña incluida en este README es únicamente una credencial de demostración para facilitar la reproducción de la versión del TFM y no debe considerarse una credencial destinada a un entorno de producción.
+La contraseña es independiente de los datos sintéticos incluidos en el repositorio. Estos datos únicamente permiten comprobar el funcionamiento del panel docente sin utilizar información real del alumnado.
+
+Para un entorno real o de producción se recomienda utilizar una contraseña propia y evitar incluir credenciales directamente en archivos del proyecto o repositorios públicos.
 
 ---
 
@@ -314,10 +306,18 @@ El panel docente permite consultar las sesiones registradas durante las evaluaci
 
 El acceso se realiza desde la interfaz principal mediante la opción correspondiente al panel docente.
 
-Para acceder a la versión de demostración se utiliza:
+El acceso al panel docente se realiza mediante la contraseña definida en la variable de entorno `TEACHER_PASSWORD` durante el despliegue.
+
+Por ejemplo, si se ha utilizado:
 
 ```text
-Panel_docente2026
+-e TEACHER_PASSWORD=MiClavePersonal
+```
+
+la contraseña de acceso será:
+
+```text
+MiClavePersonal
 ```
 
 El panel permite:
@@ -410,7 +410,9 @@ Para comprobar el funcionamiento de la plataforma se puede realizar la siguiente
 
 ### Paso 1. Construir la imagen
 
-```bash
+Desde la carpeta raíz del proyecto:
+
+```powershell
 docker build -t ciberretos .
 ```
 
@@ -419,8 +421,10 @@ docker build -t ciberretos .
 En PowerShell:
 
 ```powershell
-docker run --name ciberretos -p 8080:8080 -e TEACHER_PASSWORD=Panel_docente2026 -v "${PWD}\data:/app/data" ciberretos
+docker run --name ciberretos -p 8080:8080 -e TEACHER_PASSWORD=MiClavePersonal -v "${PWD}\data:/app/data" ciberretos
 ```
+
+La contraseña `MiClavePersonal` es únicamente un ejemplo. Cada usuario puede sustituirla por la contraseña que desee.
 
 ### Paso 3. Abrir la plataforma
 
@@ -459,11 +463,15 @@ Durante la actividad se pueden comprobar elementos como:
 
 Volver a la pantalla principal y acceder al panel docente.
 
-Introducir:
+Introducir la contraseña que se haya definido en la variable de entorno `TEACHER_PASSWORD` durante el arranque del contenedor.
+
+Por ejemplo, si se utilizó:
 
 ```text
-Panel_docente2026
+MiClavePersonal
 ```
+
+esa será la contraseña utilizada para acceder al panel docente.
 
 ### Paso 7. Comprobar las sesiones
 
@@ -549,15 +557,17 @@ Para utilizar el panel docente es necesario establecer la variable de entorno `T
 ### PowerShell
 
 ```powershell
-$env:TEACHER_PASSWORD="Panel_docente2026"
+$env:TEACHER_PASSWORD="MiClavePersonal"
 npm start
 ```
 
 ### Linux/macOS
 
 ```bash
-TEACHER_PASSWORD=Panel_docente2026 npm start
+TEACHER_PASSWORD=MiClavePersonal npm start
 ```
+
+En ambos casos, `MiClavePersonal` es únicamente un ejemplo y puede sustituirse por una contraseña elegida por el usuario.
 
 ---
 
