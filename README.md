@@ -7,6 +7,23 @@ El sistema permite realizar diferentes itinerarios de retos para 1.º, 2.º, 3.�
 El proyecto está diseñado para facilitar su utilización en un entorno educativo y proporcionar un sistema reproducible para la realización de las pruebas descritas en el Trabajo Fin de Máster (TFM).
 
 ---
+## Versión estable y publicación en Zenodo
+
+La versión estable del sistema utilizada como referencia en el Trabajo Fin
+de Máster es la `v1.0.0`.
+
+Esta versión ha sido publicada como Release estable en GitHub y archivada
+en Zenodo para garantizar su conservación y facilitar la reproducibilidad
+y citación del software.
+
+DOI: https://doi.org/10.5281/zenodo.22143741
+
+Referencia bibliográfica:
+
+soniapalomo. (2026). *soniapalomo/Ciberretos: CiberRetos v1.0.0 —
+Release estable (Version v1.0.0)* [Computer software]. Zenodo.
+
+---
 
 ## 1. Descripción del proyecto
 
