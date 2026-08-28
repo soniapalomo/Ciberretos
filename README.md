@@ -1,5 +1,7 @@
 # CiberRetos
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22143741.svg)](https://doi.org/10.5281/zenodo.22143741)
+
 Plataforma educativa de evaluación de la competencia digital mediante retos gamificados para alumnado de Educación Secundaria Obligatoria (ESO).
 
 El sistema permite realizar diferentes itinerarios de retos para 1.º, 2.º, 3.º y 4.º de ESO, registrar automáticamente las métricas generadas durante las sesiones y consultar posteriormente los resultados desde un panel destinado al profesorado.
@@ -607,25 +609,27 @@ No se publican registros reales asociados a nombres, identificadores personales 
 Las imágenes y recursos incluidos en `uploads/` forman parte de los recursos necesarios para reproducir determinados retos de la plataforma.
 
 ---
+## 20. Versión estable
 
-## 20. Versión
-
-La versión estable del proyecto utilizada como referencia para el TFM es:
-
-```text
-1.0.0
-```
-
-Esta versión será publicada mediante una Release del repositorio con la etiqueta:
+La versión estable del proyecto utilizada como referencia para el Trabajo Fin de Máster es:
 
 ```text
 v1.0.0
 ```
 
-La Release `v1.0.0` permitirá disponer de una referencia concreta y reproducible del estado del sistema presentado en el TFM.
+Esta versión ha sido publicada mediante una Release del repositorio de GitHub con la etiqueta `v1.0.0`.
+
+La versión estable también ha sido archivada en Zenodo, donde se ha generado un identificador DOI permanente para facilitar su identificación, citación y reproducción:
+
+[https://doi.org/10.5281/zenodo.22143741](https://doi.org/10.5281/zenodo.22143741)
+
+La referencia bibliográfica de esta versión es:
+
+> soniapalomo. (2026). *soniapalomo/Ciberretos: CiberRetos v1.0.0 — Release estable* (Version v1.0.0) [Computer software]. Zenodo. [https://doi.org/10.5281/zenodo.22143741](https://doi.org/10.5281/zenodo.22143741)
+
+La Release de GitHub y el registro de Zenodo permiten identificar de forma concreta el estado del sistema utilizado como referencia en el TFM y facilitan su reproducibilidad.
 
 ---
-
 ## 21. Licencia y finalidad
 
 Este repositorio se proporciona con finalidad académica y de investigación en el contexto del Trabajo Fin de Máster.
