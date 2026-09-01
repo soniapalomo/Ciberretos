@@ -1,0 +1,20 @@
+cff-version: 1.2.0
+
+message: "Si utilizas este software, por favor cítalo utilizando estos metadatos."
+
+title: "Diseño y validación de un instrumento de evaluación diagnóstica de competencias en ciberseguridad para la Educación Secundaria Obligatoria."
+
+authors:
+  - family-names: "Palomo Martí"
+    given-names: "Sonia"
+    affiliation: "Universitat Politècnica de València"
+
+version: "1.0.0"
+
+date-released: "2026-08-28"
+
+repository-code: "https://github.com/soniapalomo/Ciberretos"
+
+license: "MIT"
+
+doi: "10.5281/zenodo.22143741"
